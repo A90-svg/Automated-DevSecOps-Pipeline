@@ -1,10 +1,10 @@
 # GitHub Secrets Setup Guide
 
-## Required Secrets for DevSecOps Pipeline
+## Required Secrets for Automated DevSecOps Pipeline
 
 ### 1. SonarCloud Secrets
 - `SONAR_TOKEN`: Get from SonarCloud project setup
-- `SONAR_PROJECT_KEY`: Set to "finsecure-devsecops-pipeline"  
+- `SONAR_PROJECT_KEY`: Set to "automated-devsecops-pipeline"  
 - `SONAR_ORGANIZATION`: Your GitHub username
 
 ### 2. Snyk Secrets

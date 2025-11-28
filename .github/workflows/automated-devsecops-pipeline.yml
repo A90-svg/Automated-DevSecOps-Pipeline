@@ -139,12 +139,14 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      with: # u can delete the last one here
+      with: # u can add exclusions here ex.  -Dsonar.exclusions=**/node_modules/**,**/test/**,**/tests/**,**/*.test.js,**/coverage/** 
         args: >
           -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
           -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
+          -Dsonar.token=${{ secrets.SONAR_TOKEN }}
           -Dsonar.sources=.
-          -Dsonar.exclusions=**/node_modules/**,**/test/**,**/tests/**,**/*.test.js,**/coverage/** 
+          -Dsonar.exclusions=**/node_modules/**,**/test/**,**/tests/**,**/*.test.js,**/coverage/**,**/dist/**,**/build/**
+         
 
     # SAST Summary
     - name:  SAST Summary

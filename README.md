@@ -201,15 +201,123 @@ This application includes several security measures:
 - ✅ Vulnerability management and scanning
 - ✅ Continuous monitoring and reporting
 
+## Pipeline Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           GITHUB REPOSITORY                                 │
+│                  A90-svg/Automated-DevSecOps-Pipeline                       │
+└─────────────────────────┬───────────────────────────────────────────────────┘
+                          │
+                          ▼ (Push to main/develop or Pull Request)
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         GITHUB ACTIONS WORKFLOW                             │
+│                     automated-devsecops-pipeline.yml                        │
+└─────────────────────────┬───────────────────────────────────────────────────┘
+                          │
+                          ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                       JOB 1: BUILD AND TEST                                 │
+│        ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐        │
+│        │  Setup Node.js  │  │ Install Deps    │  │   Unit Tests    │        │
+│        │    (22.20.0)    │  │    (npm ci)     │  │   (npm test)    │        │
+│        └─────────────────┘  └─────────────────┘  └─────────────────┘        │
+│        ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐        │
+│        │   Code Linting  │  │  Docker Build   │  │  Save Artifact  │        │
+│        │  (npm run lint) │  │ (multi-stage)   │  │   (docker img)  │        │
+│        └─────────────────┘  └─────────────────┘  └─────────────────┘        │
+└─────────────────────────────┬───────────────────────────────────────────────┘
+                              │ (Parallel Execution)
+            ┌─────────────────┼─────────────────┐
+            ▼                 ▼                 ▼
+      ┌─────────────┐  ┌─────────────┐  ┌─────────────┐
+      │   JOB 2     │  │   JOB 3     │  │   JOB 4     │
+      │   SAST      │  │   SCA       │  │   DAST      │
+      │ (SonarCloud)│  │  (Snyk)     │  │ (OWASP ZAP) │
+      └─────────────┘  └─────────────┘  └─────────────┘
+           │                 │                 │
+           ▼                 ▼                 ▼
+   ┌──────────────┐  ┌───────────────┐  ┌─────────────┐
+   │ Code Quality │  │ Dependency    │  │ Dynamic     │
+   │ Analysis     │  │ Vulnerability │  │ Security    │
+   │ Report       │  │ Scan Report   │  │ Test Report │
+   └──────────────┘  └───────────────┘  └─────────────┘
+                          │
+                          ▼ (All jobs complete)
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        JOB 5: SECURITY GATE                                 │
+│        ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐        │
+│        │  Evaluate SAST  │  │  Evaluate SCA   │  │  Evaluate DAST  │        │
+│        │    Results      │  │    Results      │  │    Results      │        │
+│        └─────────────────┘  └─────────────────┘  └─────────────────┘        │
+│        ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐        │
+│        │ Severity Check  │  │ Merge Decision  │  │ Status Summary  │        │
+│        │ (High/Med/Low)  │  │ (Block/Allow)   │  │ (Pass/Fail)     │        │
+│        └─────────────────┘  └─────────────────┘  └─────────────────┘        │
+└──────────────────────────────┬──────────────────────────────────────────────┘
+                               │
+                               ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                       JOB 6: REPORT GENERATION                              │
+│     ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐           │
+│     │ Executive       │  │ Compliance      │  │ Artifact        │           │
+│     │ Summary         │  │ Metrics         │  │ Storage         │           │
+│     │ Report          │  │ (PDPL/CBB)      │  │ (30 days)       │           │
+│     └─────────────────┘  └─────────────────┘  └─────────────────┘           │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        PIPELINE OUTCOMES                                    │
+│     ┌─────────────────┐  ┌──────────────────┐  ┌─────────────────┐          │
+│     │   Merge Status  │  │ Security Reports │  │ Compliance      │          │
+│     │ (Blocked/Allow) │  │ (Artifacts)      │  │ Status          │          │
+│     └─────────────────┘  └──────────────────┘  └─────────────────┘          │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                          SECURITY INTEGRATIONS                              │
+│     ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐           │
+│     │   GITHUB        │  │   SONARCLOUD    │  │     SNYK        │           │
+│     │   SECRETS       │  │   (SAST)        │  │    (SCA)        │           │
+│     │ (Token Mgmt)    │  │ (Code Quality)  │  │ (Dependencies)  │           │
+│     └─────────────────┘  └─────────────────┘  └─────────────────┘           │
+│     ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐           │
+│     │   OWASP ZAP     │  │     DOCKER      │  │   COMPLIANCE    │           │
+│     │    (DAST)       │  │ (Container)     │  │ (PDPL/CBB)      │           │
+│     │ (Dynamic Test)  │  │ (Security)      │  │ (Framework)     │           │
+│     └─────────────────┘  └─────────────────┘  └─────────────────┘           │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                          COMPLIANCE FRAMEWORKS                              │
+│     ┌───────────────────┐                    ┌───────────────────┐          │
+│     │   PDPL            │                    │   CBB FRAMEWORK   │          │
+│     │ (Bahrain)         │                    │  (Cybersecurity)  │          │
+│     │ • Data Privacy    │                    │ • Auto Testing    │          │
+│     │ • Synthetic Data  │                    │ • Access Control  │          │
+│     │ • Audit Trail     │                    │ • Vulnerability   │          │
+│     └───────────────────┘                    └───────────────────┘          │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+## Pipeline Flow Summary
+
+**Trigger:** Code push to `main`/`develop` or Pull Request  
+**Runtime:** ~13 minutes total  
+**Security Tools:** SonarCloud (SAST) + Snyk (SCA) + OWASP ZAP (DAST)  
+**Decision Point:** Security Gate blocks merge on high-severity findings  
+**Output:** Compliance reports + artifacts + merge decision
+
 ## Demo Application Features
 
 The FinSecure demo app includes:
 - **Login/Signup**: Email-based authentication
-- **OTP Verification**: EmailJS integration (demo mode available)
+- **OTP Verification**: EmailJS integration 
 - **Dashboard**: Account balance display
-- **Transaction History**: 40+ mock transactions
+- **Transaction History**: 50+ mock transactions
 - **Logout**: Session management
-- **Responsive Design**: Mobile-friendly interface
+- **Responsive Design**: web-friendly interface
 
 ## Quality Metrics
 
@@ -270,23 +378,11 @@ This builds and runs the application with all dependencies.
    - `SCA Scan (Snyk)`
    - `Security Gate`
 
-## Contributing
+## Copyright
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+**© 2025 A90-svg - All Rights Reserved**
 
-**Note:** All contributions must pass the automated security pipeline before merge.
-
-## License
-
-This project is licensed under the ISC License - see the [LICENSE](LICENSE) file for details.
-
-## Support
-
-For support, please open an issue in the GitHub repository.
+This project is for educational and demonstration purposes only. No part of this project may be reproduced, distributed, or used for any commercial purposes without explicit written permission from the copyright holder.
 
 ---
 
