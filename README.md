@@ -14,7 +14,7 @@ This project implements a comprehensive DevSecOps pipeline for the demo fintech 
 - **Security Gates** with merge blocking for high-severity vulnerabilities
 - **Automated Reporting** with severity levels and compliance metrics
 
-## Scope & Requirements
+## Scope 
 
 **In-Scope:**
 - Automated DevSecOps pipeline using GitHub Actions
@@ -33,8 +33,8 @@ This project implements a comprehensive DevSecOps pipeline for the demo fintech 
 ## Prerequisites
 
 - Node.js **22.20.0** or higher
-- npm 9.x or higher
-- Docker 22.10+ and Docker Compose
+- npm 10.x or higher
+- Docker 28.4+ and Docker Compose
 - GitHub repository with Actions enabled
 - SonarCloud account (free tier)
 - Snyk account (free tier)
