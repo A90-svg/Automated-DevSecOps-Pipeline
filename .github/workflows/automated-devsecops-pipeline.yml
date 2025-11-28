@@ -133,7 +133,7 @@ jobs:
       with:
         fetch-depth: 0
 
-    # Test Case: SAST with SonarCloud #check this
+    # Test Case: SAST with SonarCloud
     - name: SonarCloud Scan
       uses: SonarSource/sonarqube-scan-action@v6
       env:
