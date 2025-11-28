@@ -14,7 +14,7 @@ This project implements a comprehensive DevSecOps pipeline for the demo fintech 
 - **Security Gates** with merge blocking for high-severity vulnerabilities
 - **Automated Reporting** with severity levels and compliance metrics
 
-## Scope & Requirements
+## Scope 
 
 **In-Scope:**
 - Automated DevSecOps pipeline using GitHub Actions
@@ -33,8 +33,8 @@ This project implements a comprehensive DevSecOps pipeline for the demo fintech 
 ## Prerequisites
 
 - Node.js **22.20.0** or higher
-- npm 9.x or higher
-- Docker 22.10+ and Docker Compose
+- npm 10.x or higher
+- Docker 28.4+ and Docker Compose
 - GitHub repository with Actions enabled
 - SonarCloud account (free tier)
 - Snyk account (free tier)
@@ -65,8 +65,8 @@ Required secrets for pipeline functionality:
 ```bash
 # Repository > Settings > Secrets and variables > Actions
 SONAR_TOKEN=your_sonarcloud_token
-SONAR_PROJECT_KEY=finsecure-devsecops-pipeline
-SONAR_ORGANIZATION=A90-svg
+SONAR_PROJECT_KEY=your_project_key
+SONAR_ORGANIZATION=your_github_username
 SNYK_TOKEN=your_snyk_token
 EMAILJS_SERVICE_ID=your_emailjs_service_id (optional)
 EMAILJS_TEMPLATE_ID=your_emailjs_template_id (optional)
@@ -135,15 +135,11 @@ Run tests in watch mode:
 npm run test:watch
 ```
 
-## Security
+Run security audit:
 
-This application includes several security measures:
-
-- **SAST**: SonarCloud integration for static code analysis
-- **SCA**: Snyk for dependency vulnerability scanning
-- **DAST**: OWASP ZAP for dynamic application security testing
-- **Secrets Management**: Environment variables and GitHub Secrets
-- **Docker Security**: Non-root user, minimal base image
+```bash
+npm run security:audit
+```
 
 ## CI/CD Pipeline
 
@@ -215,26 +211,6 @@ The FinSecure demo app includes:
 - **Logout**: Session management
 - **Responsive Design**: Mobile-friendly interface
 
-## Testing
-
-Run the test suite with coverage:
-
-```bash
-npm test
-```
-
-Run tests in watch mode:
-
-```bash
-npm run test:watch
-```
-
-Run security audit:
-
-```bash
-npm run security:audit
-```
-
 ## Quality Metrics
 
 ### Performance Requirements Met
@@ -249,6 +225,50 @@ npm run security:audit
 - ✅ **Merge blocking**: High-severity vulnerabilities
 - ✅ **Secrets masking**: 100% via GitHub Secrets
 - ✅ **Compliance reporting**: PDPL + CBB Framework metrics
+
+### Docker Compose (Recommended for Development)
+
+```bash
+docker-compose up -d
+```
+
+This builds and runs the application with all dependencies.
+
+## Troubleshooting
+
+### Common Issues
+
+**Pipeline fails on SAST scan:**
+- Verify SONAR_TOKEN is correct
+- Check SonarCloud organization access
+- Ensure project key matches
+
+**Pipeline fails on SCA scan:**
+- Verify SNYK_TOKEN is valid
+- Check Snyk account permissions
+
+**Docker build fails:**
+- Ensure Node.js 22.20.0 compatibility
+- Check Docker daemon is running
+- Verify .dockerignore isn't excluding needed files
+
+**Application won't start:**
+- Check .env file configuration
+- Verify port 3000 is available
+- Review server logs for errors
+
+### Branch Protection Setup
+
+1. Go to repository **Settings > Branches**
+2. Click **Add branch protection rule**
+3. **Branch name pattern**: `main`
+4. **Require status checks to pass before merge**: ✅
+5. **Require pull request reviews**: ✅
+6. Select these required checks:
+   - `Build and Test`
+   - `SAST Scan (SonarCloud)`
+   - `SCA Scan (Snyk)`
+   - `Security Gate`
 
 ## Contributing
 
