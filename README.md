@@ -250,24 +250,6 @@ npm run security:audit
 - ✅ **Secrets masking**: 100% via GitHub Secrets
 - ✅ **Compliance reporting**: PDPL + CBB Framework metrics
 
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-**Note:** All contributions must pass the automated security pipeline before merge.
-
-## License
-
-This project is licensed under the ISC License - see the [LICENSE](LICENSE) file for details.
-
-## Support
-
-For support, please open an issue in the GitHub repository.
-
 ---
 
 **Project Status:** ✅ Ready for testing | **Last Updated:** 2025-11-28
