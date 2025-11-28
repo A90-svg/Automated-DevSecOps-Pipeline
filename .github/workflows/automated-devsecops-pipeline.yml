@@ -133,15 +133,14 @@ jobs:
       with:
         fetch-depth: 0
 
-    # Test Case: SAST with SonarCloud
+    # Test Case: SAST with SonarCloud # add the tokens in github secrets
     - name: SonarCloud Scan
       uses: SonarSource/sonarqube-scan-action@v6
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-         
 
-    # SAST Summary
+    # SAST Summary 
     - name:  SAST Summary
       run: |
         echo "SAST Scan Results" >> $GITHUB_STEP_SUMMARY
