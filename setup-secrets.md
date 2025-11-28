@@ -4,7 +4,7 @@
 
 ### 1. SonarCloud Secrets
 - `SONAR_TOKEN`: Get from SonarCloud project setup
-- `SONAR_PROJECT_KEY`: Set to "automated-devsecops-pipeline"  
+- `SONAR_PROJECT_KEY`: Set to your project key 
 - `SONAR_ORGANIZATION`: Your GitHub username
 
 ### 2. Snyk Secrets
