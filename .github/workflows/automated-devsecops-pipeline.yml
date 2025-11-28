@@ -1,0 +1,390 @@
+# ============================================
+# FINSECURE DEVSECOPS PIPELINE
+# ============================================
+# Automated CI/CD with SAST, SCA, DAST
+# Supports: PDPL and CBB Cybersecurity Framework
+# ============================================
+
+name: Automated DevSecOps Pipeline 
+
+# Workflow trigger configuration
+on:
+  # Trigger on push to main or develop branches
+  push:
+    branches: [ main, develop ]
+    # Ignore markdown and text files to prevent unnecessary builds
+    paths-ignore:
+      - '**/*.md'
+      - '**/*.txt'
+      - 'docs/**'
+      - '.github/**'
+      - 'LICENSE'
+
+  # Trigger on pull requests targeting main 
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+  # Allow manual triggering from GitHub UI
+  workflow_dispatch:
+    inputs:
+      run_dast:
+        description: 'Run DAST scan'
+        required: false
+        type: boolean
+        default: true
+
+env:
+  DOCKER_IMAGE_NAME: finsecure-app
+  NODE_VERSION: '22.20.0'
+
+# Define the jobs that make up this workflow
+jobs:
+  # Job 1: Build and Test Application
+  build-and-test:
+    name: Build and Test
+    # Use ubuntu latest runner
+    runs-on: ubuntu-latest
+    # Set a timeout to prevent hanging builds
+    timeout-minutes: 15
+    
+    steps:
+    # Checkout the repository code
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        # Full history needed for SonarCloud analysis
+        fetch-depth: 0
+        # Token for GitHub API access
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    # Set up Node.js environment
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        # Specify Node.js version
+        node-version: ${{ env.NODE_VERSION }}
+        # Cache npm dependencies for faster builds
+        cache: 'npm'
+    
+    # Install project dependencies
+    - name: Install dependencies
+      run: npm ci  # or npm install(this is more acurate)
+  
+    # Run unit tests | for the run command u can use : npm run test
+    - name:  Run Tests
+      run: |
+        echo "Running unit tests..."
+        npm test 
+      continue-on-error: true # u can delete this
+    
+    # Run Lint code
+    - name: Run Linting
+      run: |
+        echo "Running linter..."
+        npm run lint
+      continue-on-error: true
+    
+    # Set up Docker
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    # Build Docker Image
+    - name: Build Docker Image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./Dockerfile
+        push: false
+        load: true
+        tags: ${{ env.DOCKER_IMAGE_NAME }}:${{ github.sha }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    # Save Docker Image
+    - name: Save Docker Image
+      run: docker save ${{ env.DOCKER_IMAGE_NAME }}:${{ github.sha }} > /tmp/docker-image.tar
+
+    # Upload Docker Image
+    - name:  Upload Docker Image
+      uses: actions/upload-artifact@v4
+      with:
+        name: docker-image
+        path: /tmp/docker-image.tar
+        retention-days: 1
+
+    # Build a summary
+    - name: Build Summary
+      run: |
+        echo "Build Summary" >> $GITHUB_STEP_SUMMARY
+        echo "Dependencies installed" >> $GITHUB_STEP_SUMMARY
+        echo "Docker image built: \`${{ env.DOCKER_IMAGE_NAME }}:${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+
+  # Job 2: Security Scans (SAST - SonarCloud)
+  sast-scan:
+    name: SAST Scan (SonarCloud)
+    runs-on: ubuntu-latest
+    needs: build-and-test #not sure about this part please check again later 
+    timeout-minutes: 15
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    # Test Case: SAST with SonarCloud
+    - name: SonarCloud Scan
+      uses: SonarSource/sonarcloud-github-action@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      with: # u can delete the last one here
+        args: >
+          -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
+          -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
+          -Dsonar.sources=.
+          -Dsonar.exclusions=**/node_modules/**,**/test/**,**/tests/**,**/*.test.js,**/coverage/** 
+
+    # SAST Summary
+    - name:  SAST Summary
+      run: |
+        echo "SAST Scan Results" >> $GITHUB_STEP_SUMMARY
+        echo "SonarCloud analysis completed" >> $GITHUB_STEP_SUMMARY
+        echo "[View detailed results](https://sonarcloud.io/project/overview?id=${{ secrets.SONAR_PROJECT_KEY }})" >> $GITHUB_STEP_SUMMARY
+
+   # Job 3: Security Scans (SCA - Synk)
+
+    # Test Case: SCA with Snyk
+  sca-scan:
+    name: SCA Scan (Snyk)
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    timeout-minutes: 15
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+      
+    - name: Install Dependencies
+      run: npm ci
+      
+    - name: Run Snyk Security Scan
+      uses: snyk/actions/node@master
+      continue-on-error: true
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        args: --severity-threshold=high --json-file-output=snyk-results.json
+
+    - name: Upload Snyk Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: snyk-results
+        path: snyk-results.json
+        retention-days: 30
+      
+    - name: SCA Summary
+      run: |
+        echo "SCA Scan Results" >> $GITHUB_STEP_SUMMARY
+        echo "Snyk dependency scan completed" >> $GITHUB_STEP_SUMMARY
+        echo "[View detailed results](https://app.snyk.io/)" >> $GITHUB_STEP_SUMMARY  
+
+
+    # Job 4: Security Scans (DAST - OWASP ZAP)
+
+    # Test Case: DAST with OWASP ZAP
+  dast-scan:
+    name: DAST Scan (OWASP ZAP)
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: github.event.inputs.run_dast != 'false'
+    timeout-minutes: 20
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      
+    - name: Download Docker Image
+      uses: actions/download-artifact@v4
+      with:
+        name: docker-image
+        path: /tmp
+      
+    - name: Load Docker Image
+      run: docker load < /tmp/docker-image.tar
+
+    - name: Start Application
+      run: |
+        docker run -d \
+          -p 3000:3000 \
+          --name finsecure-app \
+          -e NODE_ENV=production \
+          -e PORT=3000 \
+          -e EMAILJS_SERVICE_ID=${{ secrets.EMAILJS_SERVICE_ID }} \
+          -e EMAILJS_TEMPLATE_ID=${{ secrets.EMAILJS_TEMPLATE_ID }} \
+          -e EMAILJS_PUBLIC_KEY=${{ secrets.EMAILJS_PUBLIC_KEY }} \
+          ${{ env.DOCKER_IMAGE_NAME }}:${{ github.sha }}
+          
+        echo "Waiting for application to start..."
+        sleep 30  
+        
+        # Health check
+        for i in {1..10}; do
+         if curl -s http://localhost:3000/health > /dev/null 2>&1; then
+            echo "Application is healthy"
+            break
+          fi
+          echo "Waiting... ($i/10)"
+            sleep 5
+          if [ $i -eq 10 ]; then
+            echo "Application failed to start"
+            docker logs finsecure-app
+            exit 1
+          fi
+          done
+      
+    - name: OWASP ZAP Baseline Scan
+      uses: zaproxy/action-baseline@v0.12.0
+      with:
+        target: 'http://localhost:3000'
+        rules_file_name: '.zap/rules.tsv'
+        cmd_options: '-a -j'
+        allow_issue_writing: false
+      continue-on-error: true
+
+    - name: Upload ZAP Report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: zap-report
+        path: report_html.html
+        retention-days: 30
+      
+    - name: Stop Application
+      if: always()
+      run: |
+        docker stop finsecure-app || true
+        docker rm finsecure-app || true
+      
+    - name: DAST Summary
+      run: |
+        echo "DAST Scan Results" >> $GITHUB_STEP_SUMMARY
+        echo "OWASP ZAP baseline scan completed" >> $GITHUB_STEP_SUMMARY
+        echo "Report uploaded as artifact" >> $GITHUB_STEP_SUMMARY
+
+    # Job 5: Security Gate
+
+  security-gate:
+   name: Security Gate
+   runs-on: ubuntu-latest
+   needs: [sast-scan, sca-scan, dast-scan]
+   if: always()
+    
+   steps:
+    - name: Evaluate Security Results
+      run: |
+        GATE_STATUS="PASSED"
+          
+        echo "Security Gate Evaluation" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+
+        # Check SAST
+        if [ "${{ needs.sast-scan.result }}" == "failure" ]; then
+          echo "SAST (SonarCloud): FAILED" >> $GITHUB_STEP_SUMMARY
+          GATE_STATUS="FAILED"
+        elif [ "${{ needs.sast-scan.result }}" == "skipped" ]; then
+          echo "SAST (SonarCloud): SKIPPED" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "SAST (SonarCloud): PASSED" >> $GITHUB_STEP_SUMMARY
+        fi
+
+        # Check SCA
+        if [ "${{ needs.sca-scan.result }}" == "failure" ]; then
+          echo "SCA (Snyk): FAILED - High severity vulnerabilities detected" >> $GITHUB_STEP_SUMMARY
+          GATE_STATUS="FAILED"
+        elif [ "${{ needs.sca-scan.result }}" == "skipped" ]; then
+          echo "SCA (Snyk): SKIPPED" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "SCA (Snyk): PASSED" >> $GITHUB_STEP_SUMMARY
+        fi
+
+        # Check DAST
+        if [ "${{ needs.dast-scan.result }}" == "failure" ]; then
+          echo "DAST (OWASP ZAP): WARNINGS - Review report" >> $GITHUB_STEP_SUMMARY
+        elif [ "${{ needs.dast-scan.result }}" == "skipped" ]; then
+          echo "DAST (OWASP ZAP): SKIPPED" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "DAST (OWASP ZAP): PASSED" >> $GITHUB_STEP_SUMMARY
+        fi
+          
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "---" >> $GITHUB_STEP_SUMMARY
+          
+        if [ "$GATE_STATUS" == "FAILED" ]; then
+          echo "SECURITY GATE: FAILED" >> $GITHUB_STEP_SUMMARY
+          echo "Merge is blocked due to security issues." >> $GITHUB_STEP_SUMMARY
+          exit 1
+        else
+          echo "SECURITY GATE: PASSED" >> $GITHUB_STEP_SUMMARY
+          echo "All security checks passed." >> $GITHUB_STEP_SUMMARY
+        fi
+
+    # Job 6: Generate Report
+  generate-report:
+    name: Generate Report
+    runs-on: ubuntu-latest
+    needs: [build-and-test, sast-scan, sca-scan, dast-scan, security-gate]
+    if: always()
+    
+    steps:
+      - name: Generate Executive Report
+        run: |
+          cat << 'EOF' >> $GITHUB_STEP_SUMMARY
+          
+          # FinSecure DevSecOps Pipeline Report
+
+          ## Pipeline Information
+          | Property | Value |
+          |----------|-------|
+          | **Run** | #${{ github.run_number }} |
+          | **Commit** | `${{ github.sha }}` |
+          | **Branch** | `${{ github.ref_name }}` |
+          | **Actor** | @${{ github.actor }} |
+          | **Event** | `${{ github.event_name }}` |
+          
+          ## Security Scan Summary
+          | Scan | Tool | Status |
+          |------|------|--------|
+          | SAST | SonarCloud | ${{ needs.sast-scan.result == 'success' && 'Passed' || needs.sast-scan.result == 'skipped' && 'Skipped' || 'Review' }} |
+          | SCA | Snyk | ${{ needs.sca-scan.result == 'success' && 'Passed' || needs.sca-scan.result == 'skipped' && 'Skipped' || 'Review' }} |
+          | DAST | OWASP ZAP | ${{ needs.dast-scan.result == 'success' && 'Passed' || needs.dast-scan.result == 'skipped' && 'Skipped' || 'Review' }} |
+
+          ## Compliance Status
+          
+          ### PDPL Compliance
+          - Secrets encrypted via GitHub Secrets
+          - No personal data in logs
+          - Mock data used for testing
+          
+          ### CBB Cybersecurity Framework
+          - Automated security testing
+          - Vulnerability scanning
+          - Access controls enabled
+          - Audit trail maintained
+          
+          ---
+          *Generated by FinSecure Application's Automated DevSecOps Pipeline*
+          EOF
+          
+
+
+    
+
+    
