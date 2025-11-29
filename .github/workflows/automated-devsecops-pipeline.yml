@@ -56,7 +56,7 @@ jobs:
         # Full history needed for SonarCloud analysis
         fetch-depth: 0
         # Token for GitHub API access
-        token: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ secrets.GIT_TOKEN }}
     
     # Set up Node.js environment
     - name: Setup Node.js
@@ -137,8 +137,8 @@ jobs:
     - name: SonarCloud Scan
       uses: SonarSource/sonarqube-scan-action@v6
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN || '' }}
+        GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
          
 
     # SAST Summary
@@ -173,7 +173,7 @@ jobs:
       uses: snyk/actions/node@master
       continue-on-error: true
       env:
-        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN || '' }}
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
       with:
         args: --severity-threshold=high --json-file-output=snyk-results.json
 
@@ -222,11 +222,11 @@ jobs:
           --name finsecure-app \
           -e NODE_ENV=production \
           -e PORT=3000 \
-          -e EMAILJS_SERVICE_ID=${{ secrets.EMAILJS_SERVICE_ID || '' }} \
-          -e EMAILJS_TEMPLATE_ID=${{ secrets.EMAILJS_TEMPLATE_ID || '' }} \
-          -e EMAILJS_PUBLIC_KEY=${{ secrets.EMAILJS_PUBLIC_KEY || '' }} \
-          -e EMAILJS_PRIVATE_KEY=${{ secrets.EMAILJS_PRIVATE_KEY || '' }} \
-          -e ALLOWED_ORIGINS=${{ secrets.ALLOWED_ORIGINS || '*' }} \
+          -e EMAILJS_SERVICE_ID=${{ secrets.EMAILJS_SERVICE_ID }} \
+          -e EMAILJS_TEMPLATE_ID=${{ secrets.EMAILJS_TEMPLATE_ID }} \
+          -e EMAILJS_PUBLIC_KEY=${{ secrets.EMAILJS_PUBLIC_KEY }} \
+          -e EMAILJS_PRIVATE_KEY=${{ secrets.EMAILJS_PRIVATE_KEY }} \
+          -e ALLOWED_ORIGINS=${{ secrets.ALLOWED_ORIGINS }} \
           ${{ env.DOCKER_IMAGE_NAME }}:${{ github.sha }}
           
         echo "Waiting for application to start..."
