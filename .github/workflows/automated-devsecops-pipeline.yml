@@ -169,21 +169,45 @@ jobs:
     - name: Install Dependencies
       run: npm ci
       
+    - name: Install Snyk CLI
+      run: npm install -g snyk
+    
     - name: Run Snyk Security Scan
-      uses: snyk/actions/node@master
+      uses: snyk/actions/node@v0.7.0
       continue-on-error: true
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
       with:
-        args: --severity-threshold=high --json-file-output=snyk-results.json
+        args: --severity-threshold=high --json-file-output=snyk-results.json --sarif-file-output=snyk-results.sarif
+
+    - name: Fallback Snyk Scan (if action fails)
+      if: failure()
+      run: |
+        echo "Running fallback Snyk scan..."
+        snyk test --json > snyk-results.json || true
+        snyk test --sarif > snyk-results.sarif || true
+
+    - name: Check Snyk Results File
+      run: |
+        echo "Checking for Snyk results files..."
+        ls -la *.json *.sarif 2>/dev/null || echo "No result files found"
+        if [ -f "snyk-results.json" ]; then
+          echo "✅ snyk-results.json found"
+          cat snyk-results.json | head -20
+        else
+          echo "❌ snyk-results.json not found"
+        fi
 
     - name: Upload Snyk Results
       uses: actions/upload-artifact@v4
       if: always()
       with:
         name: snyk-results
-        path: snyk-results.json
+        path: |
+          snyk-results.json
+          snyk-results.sarif
         retention-days: 30
+        if-no-files-found: warn
       
     - name: SCA Summary
       run: |
