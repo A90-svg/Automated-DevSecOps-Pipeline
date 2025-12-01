@@ -165,8 +165,6 @@ app.post('/api/send-otp', validateRequest(otpSchema), async (req, res, next) => 
         },
         body: JSON.stringify(emailPayload)
       });
-
-      const data = await response.text();
       
       if (!response.ok) {
         return res.status(500).json({ 
@@ -194,7 +192,7 @@ const PORT = process.env.PORT || 3000;
 app.use(errorHandler);
 
 const server = httpServer.listen(PORT, '0.0.0.0', () => {
-  if (process.env.NODE_ENV !== 'test') {
+  if (process.env.NODE_ENV !== 'test' && process.env.NODE_ENV !== 'production') {
     console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
     console.log(`Health check: http://localhost:${PORT}/health`);
     console.log(`App: http://localhost:${PORT}`);
@@ -203,7 +201,7 @@ const server = httpServer.listen(PORT, '0.0.0.0', () => {
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
-  if (process.env.NODE_ENV !== 'test') {
+  if (process.env.NODE_ENV !== 'test' && process.env.NODE_ENV !== 'production') {
     console.error('Unhandled Rejection:', err);
   }
   server.close(() => process.exit(1));

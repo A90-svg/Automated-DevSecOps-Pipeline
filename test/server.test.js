@@ -1,11 +1,5 @@
 import request from 'supertest';
-import { fileURLToPath } from 'url';
-import path from 'path';
-import express from 'express';
 import { jest } from '@jest/globals';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // Mock the server import
 jest.unstable_mockModule('../server.js', () => ({

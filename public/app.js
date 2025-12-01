@@ -14,78 +14,415 @@ const STORAGE_SESSION_KEY = 'finsecure_session_v1';
 
 // EmailJS configuration handled securely
 
+// Secure random reference generator
+function generateSecureRef(prefix) {
+  const array = new Uint32Array(1);
+  crypto.getRandomValues(array);
+  return prefix + array[0].toString(36).slice(2,8).toUpperCase();
+}
+
 // DEFAULT_DB: base data used when no saved db exists. Kept as a JS constant.
 // PayTabs's Developers can update this default dataset if they want different demo data.
 const DEFAULT_DB = {
   // Support multiple users - store as object with email as key
   users: {
-        'finsecureapp@gmail.com': {
-          first: 'Lily',
-          last: 'Blue',
-          email: 'finsecureapp@gmail.com',
-          phone: '33344455',
-          password: 'FinSecure123!', // Default password
-          mfaEnabled: true,
-          balance: 1842.75,
-          transactions: [
-            { title: 'City Market', note: 'Groceries', amount: -22.95, date: '2025-10-28 18:23', ref: 'CC-10281823' },
-            { title: 'Fuel Station', note: 'Petrol top-up', amount: -7.000, date: '2025-10-27 09:12', ref: 'FS-10270912' },
-            { title: 'Bank Transfer', note: 'Transfer to Ali', amount: -50.000, date: '2025-10-26 21:05', ref: 'BT-10262105' },
-            { title: 'Settlement', note: 'Freelance payout', amount: +120.000, date: '2025-10-26 15:42', ref: 'SET-10261542' },
-            { title: 'Local Diner', note: 'Dinner', amount: -5.800, date: '2025-10-25 19:56', ref: 'LD-10251956' },
-            { title: 'Supermarket', note: 'Household', amount: -18.200, date: '2025-10-24 13:14', ref: 'SM-10241314' },
-            { title: 'Mobile Recharge', note: 'Top-up', amount: -3.000, date: '2025-10-23 20:44', ref: 'MR-10232044' },
-            { title: 'Utilities', note: 'Electricity', amount: -28.350, date: '2025-10-23 08:10', ref: 'UT-10230810' },
-            { title: 'Coffee Shop', note: 'Coffee', amount: -2.700, date: '2025-10-22 11:02', ref: 'CS-10221102' },
-            { title: 'Delivery Service', note: 'Lunch order', amount: -6.900, date: '2025-10-21 13:47', ref: 'DS-10211347' },
-            { title: 'Bank Transfer', note: 'Transfer from Sara', amount: +75.000, date: '2025-10-21 10:15', ref: 'BT-10211015' },
-            { title: 'Marketplace', note: 'Electronics', amount: -49.990, date: '2025-10-20 21:33', ref: 'MP-10202133' },
-            { title: 'Telco', note: 'Fiber bill', amount: -16.000, date: '2025-10-19 09:00', ref: 'TEL-10210900' },
-            { title: 'Fuel Station', note: 'Petrol', amount: -6.500, date: '2025-10-18 08:40', ref: 'FS-10180840' },
-            { title: 'Cinema', note: 'Tickets', amount: -14.000, date: '2025-10-17 20:10', ref: 'CIN-10172010' },
-            { title: 'Hotel Booking', note: 'Weekend stay', amount: -122.000, date: '2025-10-16 14:22', ref: 'HTL-10161422' },
-            { title: 'Bank Transfer', note: 'Rent', amount: -300.000, date: '2025-10-15 12:00', ref: 'BT-10151200' },
-            { title: 'Refund', note: 'Accessory', amount: +9.990, date: '2025-10-14 17:11', ref: 'RF-10141711' },
-            { title: 'Burger', note: 'Meal', amount: -4.600, date: '2025-10-13 19:29', ref: 'BG-10131929' },
-            { title: 'Pharmacy', note: 'Health items', amount: -8.250, date: '2025-10-12 16:05', ref: 'PH-10121605' },
-            { title: 'Government', note: 'Fee', amount: -2.000, date: '2025-10-12 09:30', ref: 'GV-10120930' },
-            { title: 'Settlement', note: 'Payout', amount: +80.000, date: '2025-10-11 22:14', ref: 'SET-10112214' },
-            { title: 'Supermarket', note: 'Groceries', amount: -27.300, date: '2025-10-11 15:49', ref: 'SM-10111549' },
-            { title: 'Mobile Recharge', note: 'Mobile', amount: -5.000, date: '2025-10-10 10:22', ref: 'MR-10101022' },
-            { title: 'Corner Store', note: 'Snacks', amount: -6.100, date: '2025-10-09 19:17', ref: 'CS-10091917' },
-            { title: 'Utilities', note: 'Water', amount: -9.750, date: '2025-10-08 07:54', ref: 'UT-10080754' },
-            { title: 'Delivery Service', note: 'Dinner', amount: -12.300, date: '2025-10-07 21:32', ref: 'DS-10072132' },
-            { title: 'Coffee Shop', note: 'Coffee', amount: -3.100, date: '2025-10-06 08:44', ref: 'CS-10060844' },
-            { title: 'Fuel Station', note: 'Petrol', amount: -6.800, date: '2025-10-05 12:06', ref: 'FS-10051206' },
-            { title: 'Cinema', note: 'Tickets', amount: -10.000, date: '2025-10-04 20:05', ref: 'CIN-10042005' },
-            { title: 'Bank Transfer', note: 'Transfer to Ahmed', amount: -40.000, date: '2025-10-03 16:12', ref: 'BT-10031612' },
-            { title: 'Settlement', note: 'Payout', amount: +150.000, date: '2025-10-02 14:00', ref: 'SET-10021400' },
-            { title: 'Telco', note: 'Mobile bill', amount: -11.000, date: '2025-10-01 09:15', ref: 'TEL-10010915' },
-            { title: 'Refund', note: 'Order issue', amount: +4.500, date: '2025-09-30 13:44', ref: 'RF-09301344' },
-            { title: 'Local Diner', note: 'Lunch', amount: -5.400, date: '2025-09-29 12:10', ref: 'LD-09291210' },
-            { title: 'Supermarket', note: 'Groceries', amount: -21.800, date: '2025-09-28 17:41', ref: 'SM-09281741' },
-            { title: 'Fuel Station', note: 'Petrol', amount: -7.200, date: '2025-09-27 18:22', ref: 'FS-09271822' },
-            { title: 'Delivery Service', note: 'Snacks', amount: -3.900, date: '2025-09-26 19:40', ref: 'DS-09261940' },
-            { title: 'Coffee Shop', note: 'Coffee', amount: -3.300, date: '2025-09-26 08:14', ref: 'CS-09260814' },
-            { title: 'Bank Transfer', note: 'Transfer from Fatima', amount: +60.000, date: '2025-09-25 09:05', ref: 'BT-09250905' },
-            { title: 'Utilities', note: 'Electricity', amount: -29.000, date: '2025-09-24 07:55', ref: 'UT-09240755' },
-            { title: 'City Market', note: 'Groceries', amount: -17.650, date: '2025-09-23 18:38', ref: 'CC-09231838' },
-            { title: 'Mobile Recharge', note: 'Mobile', amount: -3.000, date: '2025-09-22 21:12', ref: 'MR-09222112' },
-            { title: 'Settlement', note: 'Freelance', amount: +95.000, date: '2025-09-21 16:40', ref: 'SET-09211640' },
-            { title: 'Cinema', note: 'Tickets', amount: -12.000, date: '2025-09-20 20:20', ref: 'CIN-09202020' },
-            { title: 'Marketplace', note: 'Books', amount: -18.750, date: '2025-09-19 22:02', ref: 'MP-09192202' },
-            { title: 'Pharmacy', note: 'Essentials', amount: -9.200, date: '2025-09-18 10:44', ref: 'PH-09181044' },
-            { title: 'Telco', note: 'Fiber bill', amount: -16.000, date: '2025-09-17 09:00', ref: 'TEL-09170900' },
-            { title: 'Local Diner', note: 'Dinner', amount: -6.000, date: '2025-09-16 19:18', ref: 'LD-09161918' },
-            { title: 'Supermarket', note: 'Groceries', amount: -23.450, date: '2025-09-15 14:56', ref: 'SM-09151456' },
-            { title: 'Delivery Service', note: 'Lunch', amount: -8.100, date: '2025-09-14 12:30', ref: 'DS-09141230' },
-            { title: 'Fuel Station', note: 'Petrol', amount: -6.600, date: '2025-09-13 07:50', ref: 'FS-09130750' },
-            { title: 'Refund', note: 'Item return', amount: +12.000, date: '2025-09-12 11:22', ref: 'RF-09121122' },
-            { title: 'Bank Transfer', note: 'Rent', amount: -300.000, date: '2025-09-11 12:00', ref: 'BT-09111200' },
-            { title: 'Settlement', note: 'Payout', amount: +130.000, date: '2025-09-10 14:00', ref: 'SET-09101400' }
-          ]
+    'finsecureapp@gmail.com': {
+      first: 'Lily',
+      last: 'Blue',
+      email: 'finsecureapp@gmail.com',
+      phone: '33344455',
+      password: (typeof import.meta.env !== 'undefined' && import.meta.env.VITE_DEFAULT_PASSWORD) ? import.meta.env.VITE_DEFAULT_PASSWORD : 'FinSecure123!', // Default password
+      mfaEnabled: true,
+      balance: 1842.75,
+      transactions: [
+        {
+          title: 'City Market',
+          note: 'Groceries',
+          amount: -22.95,
+          date: '2025-10-28 18:23',
+          ref: 'CC-10281823'
+        },
+        {
+          title: 'Fuel Station',
+          note: 'Petrol top-up',
+          amount: -7.000,
+          date: '2025-10-27 09:12',
+          ref: 'FS-10270912'
+        },
+        {
+          title: 'Bank Transfer',
+          note: 'Transfer to Ali',
+          amount: -50.000,
+          date: '2025-10-26 21:05',
+          ref: 'BT-10262105'
+        },
+        {
+          title: 'Settlement',
+          note: 'Freelance payout',
+          amount: +120.000,
+          date: '2025-10-26 15:42',
+          ref: 'SET-10261542'
+        },
+        {
+          title: 'Local Diner',
+          note: 'Dinner',
+          amount: -5.800,
+          date: '2025-10-25 19:56',
+          ref: 'LD-10251956'
+        },
+        {
+          title: 'Supermarket',
+          note: 'Household',
+          amount: -18.200,
+          date: '2025-10-24 13:14',
+          ref: 'SM-10241314'
+        },
+        {
+          title: 'Mobile Recharge',
+          note: 'Top-up',
+          amount: -3.000,
+          date: '2025-10-23 20:44',
+          ref: 'MR-10232044'
+        },
+        {
+          title: 'Utilities',
+          note: 'Electricity',
+          amount: -28.350,
+          date: '2025-10-23 08:10',
+          ref: 'UT-10230810'
+        },
+        {
+          title: 'Coffee Shop',
+          note: 'Coffee',
+          amount: -2.700,
+          date: '2025-10-22 11:02',
+          ref: 'CS-10221102'
+        },
+        {
+          title: 'Delivery Service',
+          note: 'Lunch order',
+          amount: -6.900,
+          date: '2025-10-21 13:47',
+          ref: 'DS-10211347'
+        },
+        {
+          title: 'Bank Transfer',
+          note: 'Transfer from Sara',
+          amount: +75.000,
+          date: '2025-10-21 10:15',
+          ref: 'BT-10211015'
+        },
+        {
+          title: 'Marketplace',
+          note: 'Electronics',
+          amount: -49.990,
+          date: '2025-10-20 21:33',
+          ref: 'MP-10202133'
+        },
+        {
+          title: 'Telco',
+          note: 'Fiber bill',
+          amount: -16.000,
+          date: '2025-10-19 09:00',
+          ref: 'TEL-10210900'
+        },
+        {
+          title: 'Fuel Station',
+          note: 'Petrol',
+          amount: -6.500,
+          date: '2025-10-18 08:40',
+          ref: 'FS-10180840'
+        },
+        {
+          title: 'Cinema',
+          note: 'Tickets',
+          amount: -14.000,
+          date: '2025-10-17 20:10',
+          ref: 'CIN-10172010'
+        },
+        {
+          title: 'Hotel Booking',
+          note: 'Weekend stay',
+          amount: -122.000,
+          date: '2025-10-16 14:22',
+          ref: 'HTL-10161422'
+        },
+        {
+          title: 'Bank Transfer',
+          note: 'Rent',
+          amount: -300.000,
+          date: '2025-10-15 12:00',
+          ref: 'BT-10151200'
+        },
+        {
+          title: 'Refund',
+          note: 'Accessory',
+          amount: +9.990,
+          date: '2025-10-14 17:11',
+          ref: 'RF-10141711'
+        },
+        {
+          title: 'Burger',
+          note: 'Meal',
+          amount: -4.600,
+          date: '2025-10-13 19:29',
+          ref: 'BG-10131929'
+        },
+        {
+          title: 'Pharmacy',
+          note: 'Health items',
+          amount: -8.250,
+          date: '2025-10-12 16:05',
+          ref: 'PH-10121605'
+        },
+        {
+          title: 'Government',
+          note: 'Fee',
+          amount: -2.000,
+          date: '2025-10-12 09:30',
+          ref: 'GV-10120930'
+        },
+        {
+          title: 'Settlement',
+          note: 'Payout',
+          amount: +80.000,
+          date: '2025-10-11 22:14',
+          ref: 'SET-10112214'
+        },
+        {
+          title: 'Supermarket',
+          note: 'Groceries',
+          amount: -27.300,
+          date: '2025-10-11 15:49',
+          ref: 'SM-10111549'
+        },
+        {
+          title: 'Mobile Recharge',
+          note: 'Mobile',
+          amount: -5.000,
+          date: '2025-10-10 10:22',
+          ref: 'MR-10101022'
+        },
+        {
+          title: 'Corner Store',
+          note: 'Snacks',
+          amount: -6.100,
+          date: '2025-10-09 19:17',
+          ref: 'CS-10091917'
+        },
+        {
+          title: 'Utilities',
+          note: 'Water',
+          amount: -9.750,
+          date: '2025-10-08 07:54',
+          ref: 'UT-10080754'
+        },
+        {
+          title: 'Delivery Service',
+          note: 'Dinner',
+          amount: -12.300,
+          date: '2025-10-07 21:32',
+          ref: 'DS-10072132'
+        },
+        {
+          title: 'Coffee Shop',
+          note: 'Coffee',
+          amount: -3.100,
+          date: '2025-10-06 08:44',
+          ref: 'CS-10060844'
+        },
+        {
+          title: 'Fuel Station',
+          note: 'Petrol',
+          amount: -6.800,
+          date: '2025-10-05 12:06',
+          ref: 'FS-10051206'
+        },
+        {
+          title: 'Cinema',
+          note: 'Tickets',
+          amount: -10.000,
+          date: '2025-10-04 20:05',
+          ref: 'CIN-10042005'
+        },
+        {
+          title: 'Bank Transfer',
+          note: 'Transfer to Ahmed',
+          amount: -40.000,
+          date: '2025-10-03 16:12',
+          ref: 'BT-10031612'
+        },
+        {
+          title: 'Settlement',
+          note: 'Payout',
+          amount: +150.000,
+          date: '2025-10-02 14:00',
+          ref: 'SET-10021400'
+        },
+        {
+          title: 'Telco',
+          note: 'Mobile bill',
+          amount: -11.000,
+          date: '2025-10-01 09:15',
+          ref: 'TEL-10010915'
+        },
+        {
+          title: 'Refund',
+          note: 'Order issue',
+          amount: +4.500,
+          date: '2025-09-30 13:44',
+          ref: 'RF-09301344'
+        },
+        {
+          title: 'Local Diner',
+          note: 'Lunch',
+          amount: -5.400,
+          date: '2025-09-29 12:10',
+          ref: 'LD-09291210'
+        },
+        {
+          title: 'Supermarket',
+          note: 'Groceries',
+          amount: -21.800,
+          date: '2025-09-28 17:41',
+          ref: 'SM-09281741'
+        },
+        {
+          title: 'Fuel Station',
+          note: 'Petrol',
+          amount: -7.200,
+          date: '2025-09-27 18:22',
+          ref: 'FS-09271822'
+        },
+        {
+          title: 'Delivery Service',
+          note: 'Snacks',
+          amount: -3.900,
+          date: '2025-09-26 19:40',
+          ref: 'DS-09261940'
+        },
+        {
+          title: 'Coffee Shop',
+          note: 'Coffee',
+          amount: -3.300,
+          date: '2025-09-26 08:14',
+          ref: 'CS-09260814'
+        },
+        {
+          title: 'Bank Transfer',
+          note: 'Transfer from Fatima',
+          amount: +60.000,
+          date: '2025-09-25 09:05',
+          ref: 'BT-09250905'
+        },
+        {
+          title: 'Utilities',
+          note: 'Electricity',
+          amount: -29.000,
+          date: '2025-09-24 07:55',
+          ref: 'UT-09240755'
+        },
+        {
+          title: 'City Market',
+          note: 'Groceries',
+          amount: -17.650,
+          date: '2025-09-23 18:38',
+          ref: 'CC-09231838'
+        },
+        {
+          title: 'Mobile Recharge',
+          note: 'Mobile',
+          amount: -3.000,
+          date: '2025-09-22 21:12',
+          ref: 'MR-09222112'
+        },
+        {
+          title: 'Settlement',
+          note: 'Freelance',
+          amount: +95.000,
+          date: '2025-09-21 16:40',
+          ref: 'SET-09211640'
+        },
+        {
+          title: 'Cinema',
+          note: 'Tickets',
+          amount: -12.000,
+          date: '2025-09-20 20:20',
+          ref: 'CIN-09202020'
+        },
+        {
+          title: 'Marketplace',
+          note: 'Books',
+          amount: -18.750,
+          date: '2025-09-19 22:02',
+          ref: 'MP-09192202'
+        },
+        {
+          title: 'Pharmacy',
+          note: 'Essentials',
+          amount: -9.200,
+          date: '2025-09-18 10:44',
+          ref: 'PH-09181044'
+        },
+        {
+          title: 'Telco',
+          note: 'Fiber bill',
+          amount: -16.000,
+          date: '2025-09-17 09:00',
+          ref: 'TEL-09170900'
+        },
+        {
+          title: 'Local Diner',
+          note: 'Dinner',
+          amount: -6.000,
+          date: '2025-09-16 19:18',
+          ref: 'LD-09161918'
+        },
+        {
+          title: 'Supermarket',
+          note: 'Groceries',
+          amount: -23.450,
+          date: '2025-09-15 14:56',
+          ref: 'SM-09151456'
+        },
+        {
+          title: 'Delivery Service',
+          note: 'Lunch',
+          amount: -8.100,
+          date: '2025-09-14 12:30',
+          ref: 'DS-09141230'
+        },
+        {
+          title: 'Fuel Station',
+          note: 'Petrol',
+          amount: -6.600,
+          date: '2025-09-13 07:50',
+          ref: 'FS-09130750'
+        },
+        {
+          title: 'Refund',
+          note: 'Item return',
+          amount: +12.000,
+          date: '2025-09-12 11:22',
+          ref: 'RF-09121122'
+        },
+        {
+          title: 'Bank Transfer',
+          note: 'Rent',
+          amount: -300.000,
+          date: '2025-09-11 12:00',
+          ref: 'BT-09111200'
+        },
+        {
+          title: 'Settlement',
+          note: 'Payout',
+          amount: +130.000,
+          date: '2025-09-10 14:00',
+          ref: 'SET-09101400'
         }
-      },
+      ]
+    }
+  },
       // Current logged-in user email (for quick access)
       currentUser: 'finsecureapp@gmail.com',
       pendingReset: false,
@@ -350,7 +687,10 @@ const DEFAULT_DB = {
     }
 
     function sendOTP() {
-      const code = String(Math.floor(100000 + Math.random() * 900000));
+      // Use crypto API for secure random number generation
+      const array = new Uint32Array(1);
+      crypto.getRandomValues(array);
+      const code = String(100000 + (array[0] % 900000));
       db.pendingOTP = code;
       otpMessage.style.display = 'none';
       const user = getCurrentUser();
@@ -834,7 +1174,7 @@ const DEFAULT_DB = {
         note: "Transfer to Friend",
         amount: -20.00,
         date: new Date().toISOString().slice(0,16).replace("T"," "),
-        ref: "BT-" + Math.random().toString(36).slice(2,8).toUpperCase()
+        ref: generateSecureRef('BT-')
       });
       saveDB();
       renderBalance();
@@ -848,7 +1188,7 @@ const DEFAULT_DB = {
         note: "Internet",
         amount: -12.300,
         date: new Date().toISOString().slice(0,16).replace("T"," "),
-        ref: "UT-" + Math.random().toString(36).slice(2,8).toUpperCase()
+        ref: generateSecureRef('UT-')
       });
       saveDB();
       renderBalance();
@@ -862,7 +1202,7 @@ const DEFAULT_DB = {
         note: "USD to BHD",
         amount: +5.250,
         date: new Date().toISOString().slice(0,16).replace("T"," "),
-        ref: "FX-" + Math.random().toString(36).slice(2,8).toUpperCase()
+        ref: generateSecureRef('FX-')
       });
       saveDB();
       renderBalance();
