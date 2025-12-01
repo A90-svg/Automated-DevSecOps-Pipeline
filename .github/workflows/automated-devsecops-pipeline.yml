@@ -317,24 +317,27 @@ jobs:
     - name: Evaluate Security Results
       run: |
         GATE_STATUS="PASSED"
+        HIGH_SEVERITY_FOUND="false"
           
         echo "Security Gate Evaluation" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
 
-        # Check SAST
+        # Check SAST for high severity issues
         if [ "${{ needs.sast-scan.result }}" == "failure" ]; then
-          echo "SAST (SonarCloud): FAILED" >> $GITHUB_STEP_SUMMARY
+          echo "SAST (SonarCloud): FAILED - High severity vulnerabilities detected" >> $GITHUB_STEP_SUMMARY
           GATE_STATUS="FAILED"
+          HIGH_SEVERITY_FOUND="true"
         elif [ "${{ needs.sast-scan.result }}" == "skipped" ]; then
           echo "SAST (SonarCloud): SKIPPED" >> $GITHUB_STEP_SUMMARY
         else
           echo "SAST (SonarCloud): PASSED" >> $GITHUB_STEP_SUMMARY
         fi
 
-        # Check SCA
+        # Check SCA for high severity vulnerabilities (CVSS ≥ 7.0)
         if [ "${{ needs.sca-scan.result }}" == "failure" ]; then
-          echo "SCA (Snyk): FAILED - High severity vulnerabilities detected" >> $GITHUB_STEP_SUMMARY
+          echo "SCA (Snyk): FAILED - High severity vulnerabilities detected (CVSS ≥ 7.0)" >> $GITHUB_STEP_SUMMARY
           GATE_STATUS="FAILED"
+          HIGH_SEVERITY_FOUND="true"
         elif [ "${{ needs.sca-scan.result }}" == "skipped" ]; then
           echo "SCA (Snyk): SKIPPED" >> $GITHUB_STEP_SUMMARY
         else
@@ -351,9 +354,23 @@ jobs:
         fi
           
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "---" >> $GITHUB_STEP_SUMMARY
-          
-        if [ "$GATE_STATUS" == "FAILED" ]; then
+        echo "Security Gate Status: $GATE_STATUS" >> $GITHUB_STEP_SUMMARY
+        
+        if [ "$HIGH_SEVERITY_FOUND" == "true" ]; then
+          echo " MERGE BLOCKED: High severity vulnerabilities detected" >> $GITHUB_STEP_SUMMARY
+          echo "Action Required: Fix high severity issues before merging" >> $GITHUB_STEP_SUMMARY
+        fi
+
+    - name: Block Merge on High Severity
+      if: contains(needs.sca-scan.result, 'failure') || contains(needs.sast-scan.result, 'failure')
+      run: |
+        echo "::error::MERGE BLOCKED: High severity vulnerabilities detected"
+        echo "::error::Please fix all high severity (CVSS ≥ 7.0) vulnerabilities before merging"
+        exit 1
+
+    - name: Final Security Gate Status
+      run: |
+        if [ "${{ needs.sca-scan.result }}" == "failure" ] || [ "${{ needs.sast-scan.result }}" == "failure" ]; then
           echo "SECURITY GATE: FAILED" >> $GITHUB_STEP_SUMMARY
           echo "Merge is blocked due to security issues." >> $GITHUB_STEP_SUMMARY
           exit 1

@@ -9,10 +9,10 @@
     "dev": "nodemon server.js",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --detectOpenHandles --forceExit",
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
+    "test:ci": "NODE_OPTIONS=--experimental-vm-modules jest --ci",
     "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
-    "test:ci": "NODE_OPTIONS=--experimental-vm-modules jest --ci --coverage",
-    "lint": "eslint . --ext .js",
-    "lint:fix": "eslint . --ext .js --fix",
+    "lint": "eslint . --ext .js --quiet",
+    "lint:fix": "eslint . --ext .js --fix --quiet",
     "format": "prettier --write .",
     "security:audit": "npm audit --production",
     "security:check": "npm audit --production && npx snyk test"
