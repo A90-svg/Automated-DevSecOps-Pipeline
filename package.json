@@ -9,7 +9,7 @@
     "dev": "nodemon server.js",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --detectOpenHandles --forceExit",
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
-    "test:ci": "NODE_OPTIONS=--experimental-vm-modules jest --ci",
+    "test:ci": "NODE_OPTIONS=--experimental-vm-modules jest --ci --coverage --coverageReporters=text --coverageThreshold='{\"global\":{\"branches\":0,\"functions\":0,\"lines\":0,\"statements\":0}}'",
     "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
     "lint": "eslint . --ext .js --quiet",
     "lint:fix": "eslint . --ext .js --fix --quiet",
