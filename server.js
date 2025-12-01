@@ -70,8 +70,7 @@ const validateRequest = (schema) => (req, res, next) => {
 };
 
 // Error handling middleware
-const errorHandler = (err, req, res, next) => {
-  console.error('Error:', err);
+const errorHandler = (err, req, res, _next) => {
   res.status(500).json({
     status: 'error',
     message: 'Internal server error',
@@ -90,7 +89,6 @@ app.use(express.static(join(__dirname, 'public'), {
 
 // Request logging
 app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
   next();
 });
 
@@ -124,12 +122,6 @@ const EMAILJS_CONFIG = {
 
 // Validate EmailJS configuration
 const isEmailJSConfigured = () => {
-  console.log('EmailJS Config Check:', {
-    serviceId: EMAILJS_CONFIG.serviceId ? 'configured' : 'missing',
-    templateId: EMAILJS_CONFIG.templateId ? 'configured' : 'missing', 
-    publicKey: EMAILJS_CONFIG.publicKey ? 'configured' : 'missing',
-    privateKey: EMAILJS_CONFIG.privateKey ? 'configured' : 'missing'
-  });
   return EMAILJS_CONFIG.serviceId && EMAILJS_CONFIG.templateId && EMAILJS_CONFIG.publicKey && EMAILJS_CONFIG.privateKey;
 };
 
@@ -145,7 +137,6 @@ app.post('/api/send-otp', validateRequest(otpSchema), async (req, res, next) => 
 
     // For demo purposes, if EmailJS is not configured, simulate success
     if (!isEmailJSConfigured()) {
-      console.log(`Demo mode: OTP ${code} would be sent to ${to}`);
       return res.json({ 
         success: true,
         message: 'Verification code sent successfully (demo mode)'
@@ -167,8 +158,6 @@ app.post('/api/send-otp', validateRequest(otpSchema), async (req, res, next) => 
         }
       };
       
-      console.log('EmailJS payload:', JSON.stringify(emailPayload, null, 2));
-      
       const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
         method: 'POST',
         headers: {
@@ -180,20 +169,17 @@ app.post('/api/send-otp', validateRequest(otpSchema), async (req, res, next) => 
       const data = await response.text();
       
       if (!response.ok) {
-        console.error('EmailJS API error:', response.status, data);
         return res.status(500).json({ 
           error: 'Failed to send verification email. Please try again later.'
         });
       }
 
-      console.log(`OTP email sent successfully to: ${to}`);
       res.json({ 
         success: true,
         message: 'Verification code sent successfully'
       });
       
     } catch (err) {
-      console.error('Email sending error:', err);
       res.status(500).json({ 
         error: 'An error occurred while sending the verification email.'
       });
@@ -203,34 +189,43 @@ app.post('/api/send-otp', validateRequest(otpSchema), async (req, res, next) => 
   }
 });
 
-const port = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000;
 // CRITICAL: Bind to 0.0.0.0 for Docker compatibility
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 3000;
-const server = httpServer.listen(PORT, () => {
-  console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
-  console.log(`Health check: http://localhost:${PORT}/health`);
-  console.log(`App: http://localhost:${PORT}`);
+const server = httpServer.listen(PORT, '0.0.0.0', () => {
+  if (process.env.NODE_ENV !== 'test') {
+    console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+    console.log(`Health check: http://localhost:${PORT}/health`);
+    console.log(`App: http://localhost:${PORT}`);
+  }
 });
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
-  console.error('Unhandled Rejection:', err);
+  if (process.env.NODE_ENV !== 'test') {
+    console.error('Unhandled Rejection:', err);
+  }
   server.close(() => process.exit(1));
 });
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (err) => {
-  console.error('Uncaught Exception:', err);
+  if (process.env.NODE_ENV !== 'test') {
+    console.error('Uncaught Exception:', err);
+  }
   server.close(() => process.exit(1));
 });
 
 // Handle process termination
 process.on('SIGTERM', () => {
-  console.log('SIGTERM received. Shutting down gracefully');
+  if (process.env.NODE_ENV !== 'test') {
+    console.log('SIGTERM received. Shutting down gracefully');
+  }
   server.close(() => {
-    console.log('Process terminated');
+    if (process.env.NODE_ENV !== 'test') {
+      console.log('Process terminated');
+    }
   });
 });
 

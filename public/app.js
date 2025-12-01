@@ -1,4 +1,4 @@
- // =====================================
+// =====================================
 // SPA Router + State with localStorage persistence
 // - Persist db (user, balance, transactions) to localStorage
 // - Persist session (loggedIn/email) to localStorage so refresh keeps login (optional)
@@ -9,8 +9,8 @@
 // Storage keys & defaults
 // -----------------------
 // Keys used in localStorage so we can persist across page refreshes.
-const STORAGE_DB_KEY = "finsecure_db_v1";
-const STORAGE_SESSION_KEY = "finsecure_session_v1";
+const STORAGE_DB_KEY = 'finsecure_db_v1';
+const STORAGE_SESSION_KEY = 'finsecure_session_v1';
 
 // EmailJS configuration handled securely
 
@@ -19,75 +19,75 @@ const STORAGE_SESSION_KEY = "finsecure_session_v1";
 const DEFAULT_DB = {
   // Support multiple users - store as object with email as key
   users: {
-        "finsecureapp@gmail.com": {
-          first: "Lily",
-          last: "Blue",
-          email: "finsecureapp@gmail.com",
-          phone: "33344455",
-          password: "FinSecure123!", // Default password
+        'finsecureapp@gmail.com': {
+          first: 'Lily',
+          last: 'Blue',
+          email: 'finsecureapp@gmail.com',
+          phone: '33344455',
+          password: 'FinSecure123!', // Default password
           mfaEnabled: true,
           balance: 1842.75,
           transactions: [
-            { title: "City Market", note: "Groceries", amount: -22.95, date: "2025-10-28 18:23", ref: "CC-10281823" },
-            { title: "Fuel Station", note: "Petrol top-up", amount: -7.000, date: "2025-10-27 09:12", ref: "FS-10270912" },
-            { title: "Bank Transfer", note: "Transfer to Ali", amount: -50.000, date: "2025-10-26 21:05", ref: "BT-10262105" },
-            { title: "Settlement", note: "Freelance payout", amount: +120.000, date: "2025-10-26 15:42", ref: "SET-10261542" },
-            { title: "Local Diner", note: "Dinner", amount: -5.800, date: "2025-10-25 19:56", ref: "LD-10251956" },
-            { title: "Supermarket", note: "Household", amount: -18.200, date: "2025-10-24 13:14", ref: "SM-10241314" },
-            { title: "Mobile Recharge", note: "Top-up", amount: -3.000, date: "2025-10-23 20:44", ref: "MR-10232044" },
-            { title: "Utilities", note: "Electricity", amount: -28.350, date: "2025-10-23 08:10", ref: "UT-10230810" },
-            { title: "Coffee Shop", note: "Coffee", amount: -2.700, date: "2025-10-22 11:02", ref: "CS-10221102" },
-            { title: "Delivery Service", note: "Lunch order", amount: -6.900, date: "2025-10-21 13:47", ref: "DS-10211347" },
-            { title: "Bank Transfer", note: "Transfer from Sara", amount: +75.000, date: "2025-10-21 10:15", ref: "BT-10211015" },
-            { title: "Marketplace", note: "Electronics", amount: -49.990, date: "2025-10-20 21:33", ref: "MP-10202133" },
-            { title: "Telco", note: "Fiber bill", amount: -16.000, date: "2025-10-19 09:00", ref: "TEL-10210900" },
-            { title: "Fuel Station", note: "Petrol", amount: -6.500, date: "2025-10-18 08:40", ref: "FS-10180840" },
-            { title: "Cinema", note: "Tickets", amount: -14.000, date: "2025-10-17 20:10", ref: "CIN-10172010" },
-            { title: "Hotel Booking", note: "Weekend stay", amount: -122.000, date: "2025-10-16 14:22", ref: "HTL-10161422" },
-            { title: "Bank Transfer", note: "Rent", amount: -300.000, date: "2025-10-15 12:00", ref: "BT-10151200" },
-            { title: "Refund", note: "Accessory", amount: +9.990, date: "2025-10-14 17:11", ref: "RF-10141711" },
-            { title: "Burger", note: "Meal", amount: -4.600, date: "2025-10-13 19:29", ref: "BG-10131929" },
-            { title: "Pharmacy", note: "Health items", amount: -8.250, date: "2025-10-12 16:05", ref: "PH-10121605" },
-            { title: "Government", note: "Fee", amount: -2.000, date: "2025-10-12 09:30", ref: "GV-10120930" },
-            { title: "Settlement", note: "Payout", amount: +80.000, date: "2025-10-11 22:14", ref: "SET-10112214" },
-            { title: "Supermarket", note: "Groceries", amount: -27.300, date: "2025-10-11 15:49", ref: "SM-10111549" },
-            { title: "Mobile Recharge", note: "Mobile", amount: -5.000, date: "2025-10-10 10:22", ref: "MR-10101022" },
-            { title: "Corner Store", note: "Snacks", amount: -6.100, date: "2025-10-09 19:17", ref: "CS-10091917" },
-            { title: "Utilities", note: "Water", amount: -9.750, date: "2025-10-08 07:54", ref: "UT-10080754" },
-            { title: "Delivery Service", note: "Dinner", amount: -12.300, date: "2025-10-07 21:32", ref: "DS-10072132" },
-            { title: "Coffee Shop", note: "Coffee", amount: -3.100, date: "2025-10-06 08:44", ref: "CS-10060844" },
-            { title: "Fuel Station", note: "Petrol", amount: -6.800, date: "2025-10-05 12:06", ref: "FS-10051206" },
-            { title: "Cinema", note: "Tickets", amount: -10.000, date: "2025-10-04 20:05", ref: "CIN-10042005" },
-            { title: "Bank Transfer", note: "Transfer to Ahmed", amount: -40.000, date: "2025-10-03 16:12", ref: "BT-10031612" },
-            { title: "Settlement", note: "Payout", amount: +150.000, date: "2025-10-02 14:00", ref: "SET-10021400" },
-            { title: "Telco", note: "Mobile bill", amount: -11.000, date: "2025-10-01 09:15", ref: "TEL-10010915" },
-            { title: "Refund", note: "Order issue", amount: +4.500, date: "2025-09-30 13:44", ref: "RF-09301344" },
-            { title: "Local Diner", note: "Lunch", amount: -5.400, date: "2025-09-29 12:10", ref: "LD-09291210" },
-            { title: "Supermarket", note: "Groceries", amount: -21.800, date: "2025-09-28 17:41", ref: "SM-09281741" },
-            { title: "Fuel Station", note: "Petrol", amount: -7.200, date: "2025-09-27 18:22", ref: "FS-09271822" },
-            { title: "Delivery Service", note: "Snacks", amount: -3.900, date: "2025-09-26 19:40", ref: "DS-09261940" },
-            { title: "Coffee Shop", note: "Coffee", amount: -3.300, date: "2025-09-26 08:14", ref: "CS-09260814" },
-            { title: "Bank Transfer", note: "Transfer from Fatima", amount: +60.000, date: "2025-09-25 09:05", ref: "BT-09250905" },
-            { title: "Utilities", note: "Electricity", amount: -29.000, date: "2025-09-24 07:55", ref: "UT-09240755" },
-            { title: "City Market", note: "Groceries", amount: -17.650, date: "2025-09-23 18:38", ref: "CC-09231838" },
-            { title: "Mobile Recharge", note: "Mobile", amount: -3.000, date: "2025-09-22 21:12", ref: "MR-09222112" },
-            { title: "Settlement", note: "Freelance", amount: +95.000, date: "2025-09-21 16:40", ref: "SET-09211640" },
-            { title: "Cinema", note: "Tickets", amount: -12.000, date: "2025-09-20 20:20", ref: "CIN-09202020" },
-            { title: "Marketplace", note: "Books", amount: -18.750, date: "2025-09-19 22:02", ref: "MP-09192202" },
-            { title: "Pharmacy", note: "Essentials", amount: -9.200, date: "2025-09-18 10:44", ref: "PH-09181044" },
-            { title: "Telco", note: "Fiber bill", amount: -16.000, date: "2025-09-17 09:00", ref: "TEL-09170900" },
-            { title: "Local Diner", note: "Dinner", amount: -6.000, date: "2025-09-16 19:18", ref: "LD-09161918" },
-            { title: "Supermarket", note: "Groceries", amount: -23.450, date: "2025-09-15 14:56", ref: "SM-09151456" },
-            { title: "Delivery Service", note: "Lunch", amount: -8.100, date: "2025-09-14 12:30", ref: "DS-09141230" },
-            { title: "Fuel Station", note: "Petrol", amount: -6.600, date: "2025-09-13 07:50", ref: "FS-09130750" },
-            { title: "Refund", note: "Item return", amount: +12.000, date: "2025-09-12 11:22", ref: "RF-09121122" },
-            { title: "Bank Transfer", note: "Rent", amount: -300.000, date: "2025-09-11 12:00", ref: "BT-09111200" },
-            { title: "Settlement", note: "Payout", amount: +130.000, date: "2025-09-10 14:00", ref: "SET-09101400" }
+            { title: 'City Market', note: 'Groceries', amount: -22.95, date: '2025-10-28 18:23', ref: 'CC-10281823' },
+            { title: 'Fuel Station', note: 'Petrol top-up', amount: -7.000, date: '2025-10-27 09:12', ref: 'FS-10270912' },
+            { title: 'Bank Transfer', note: 'Transfer to Ali', amount: -50.000, date: '2025-10-26 21:05', ref: 'BT-10262105' },
+            { title: 'Settlement', note: 'Freelance payout', amount: +120.000, date: '2025-10-26 15:42', ref: 'SET-10261542' },
+            { title: 'Local Diner', note: 'Dinner', amount: -5.800, date: '2025-10-25 19:56', ref: 'LD-10251956' },
+            { title: 'Supermarket', note: 'Household', amount: -18.200, date: '2025-10-24 13:14', ref: 'SM-10241314' },
+            { title: 'Mobile Recharge', note: 'Top-up', amount: -3.000, date: '2025-10-23 20:44', ref: 'MR-10232044' },
+            { title: 'Utilities', note: 'Electricity', amount: -28.350, date: '2025-10-23 08:10', ref: 'UT-10230810' },
+            { title: 'Coffee Shop', note: 'Coffee', amount: -2.700, date: '2025-10-22 11:02', ref: 'CS-10221102' },
+            { title: 'Delivery Service', note: 'Lunch order', amount: -6.900, date: '2025-10-21 13:47', ref: 'DS-10211347' },
+            { title: 'Bank Transfer', note: 'Transfer from Sara', amount: +75.000, date: '2025-10-21 10:15', ref: 'BT-10211015' },
+            { title: 'Marketplace', note: 'Electronics', amount: -49.990, date: '2025-10-20 21:33', ref: 'MP-10202133' },
+            { title: 'Telco', note: 'Fiber bill', amount: -16.000, date: '2025-10-19 09:00', ref: 'TEL-10210900' },
+            { title: 'Fuel Station', note: 'Petrol', amount: -6.500, date: '2025-10-18 08:40', ref: 'FS-10180840' },
+            { title: 'Cinema', note: 'Tickets', amount: -14.000, date: '2025-10-17 20:10', ref: 'CIN-10172010' },
+            { title: 'Hotel Booking', note: 'Weekend stay', amount: -122.000, date: '2025-10-16 14:22', ref: 'HTL-10161422' },
+            { title: 'Bank Transfer', note: 'Rent', amount: -300.000, date: '2025-10-15 12:00', ref: 'BT-10151200' },
+            { title: 'Refund', note: 'Accessory', amount: +9.990, date: '2025-10-14 17:11', ref: 'RF-10141711' },
+            { title: 'Burger', note: 'Meal', amount: -4.600, date: '2025-10-13 19:29', ref: 'BG-10131929' },
+            { title: 'Pharmacy', note: 'Health items', amount: -8.250, date: '2025-10-12 16:05', ref: 'PH-10121605' },
+            { title: 'Government', note: 'Fee', amount: -2.000, date: '2025-10-12 09:30', ref: 'GV-10120930' },
+            { title: 'Settlement', note: 'Payout', amount: +80.000, date: '2025-10-11 22:14', ref: 'SET-10112214' },
+            { title: 'Supermarket', note: 'Groceries', amount: -27.300, date: '2025-10-11 15:49', ref: 'SM-10111549' },
+            { title: 'Mobile Recharge', note: 'Mobile', amount: -5.000, date: '2025-10-10 10:22', ref: 'MR-10101022' },
+            { title: 'Corner Store', note: 'Snacks', amount: -6.100, date: '2025-10-09 19:17', ref: 'CS-10091917' },
+            { title: 'Utilities', note: 'Water', amount: -9.750, date: '2025-10-08 07:54', ref: 'UT-10080754' },
+            { title: 'Delivery Service', note: 'Dinner', amount: -12.300, date: '2025-10-07 21:32', ref: 'DS-10072132' },
+            { title: 'Coffee Shop', note: 'Coffee', amount: -3.100, date: '2025-10-06 08:44', ref: 'CS-10060844' },
+            { title: 'Fuel Station', note: 'Petrol', amount: -6.800, date: '2025-10-05 12:06', ref: 'FS-10051206' },
+            { title: 'Cinema', note: 'Tickets', amount: -10.000, date: '2025-10-04 20:05', ref: 'CIN-10042005' },
+            { title: 'Bank Transfer', note: 'Transfer to Ahmed', amount: -40.000, date: '2025-10-03 16:12', ref: 'BT-10031612' },
+            { title: 'Settlement', note: 'Payout', amount: +150.000, date: '2025-10-02 14:00', ref: 'SET-10021400' },
+            { title: 'Telco', note: 'Mobile bill', amount: -11.000, date: '2025-10-01 09:15', ref: 'TEL-10010915' },
+            { title: 'Refund', note: 'Order issue', amount: +4.500, date: '2025-09-30 13:44', ref: 'RF-09301344' },
+            { title: 'Local Diner', note: 'Lunch', amount: -5.400, date: '2025-09-29 12:10', ref: 'LD-09291210' },
+            { title: 'Supermarket', note: 'Groceries', amount: -21.800, date: '2025-09-28 17:41', ref: 'SM-09281741' },
+            { title: 'Fuel Station', note: 'Petrol', amount: -7.200, date: '2025-09-27 18:22', ref: 'FS-09271822' },
+            { title: 'Delivery Service', note: 'Snacks', amount: -3.900, date: '2025-09-26 19:40', ref: 'DS-09261940' },
+            { title: 'Coffee Shop', note: 'Coffee', amount: -3.300, date: '2025-09-26 08:14', ref: 'CS-09260814' },
+            { title: 'Bank Transfer', note: 'Transfer from Fatima', amount: +60.000, date: '2025-09-25 09:05', ref: 'BT-09250905' },
+            { title: 'Utilities', note: 'Electricity', amount: -29.000, date: '2025-09-24 07:55', ref: 'UT-09240755' },
+            { title: 'City Market', note: 'Groceries', amount: -17.650, date: '2025-09-23 18:38', ref: 'CC-09231838' },
+            { title: 'Mobile Recharge', note: 'Mobile', amount: -3.000, date: '2025-09-22 21:12', ref: 'MR-09222112' },
+            { title: 'Settlement', note: 'Freelance', amount: +95.000, date: '2025-09-21 16:40', ref: 'SET-09211640' },
+            { title: 'Cinema', note: 'Tickets', amount: -12.000, date: '2025-09-20 20:20', ref: 'CIN-09202020' },
+            { title: 'Marketplace', note: 'Books', amount: -18.750, date: '2025-09-19 22:02', ref: 'MP-09192202' },
+            { title: 'Pharmacy', note: 'Essentials', amount: -9.200, date: '2025-09-18 10:44', ref: 'PH-09181044' },
+            { title: 'Telco', note: 'Fiber bill', amount: -16.000, date: '2025-09-17 09:00', ref: 'TEL-09170900' },
+            { title: 'Local Diner', note: 'Dinner', amount: -6.000, date: '2025-09-16 19:18', ref: 'LD-09161918' },
+            { title: 'Supermarket', note: 'Groceries', amount: -23.450, date: '2025-09-15 14:56', ref: 'SM-09151456' },
+            { title: 'Delivery Service', note: 'Lunch', amount: -8.100, date: '2025-09-14 12:30', ref: 'DS-09141230' },
+            { title: 'Fuel Station', note: 'Petrol', amount: -6.600, date: '2025-09-13 07:50', ref: 'FS-09130750' },
+            { title: 'Refund', note: 'Item return', amount: +12.000, date: '2025-09-12 11:22', ref: 'RF-09121122' },
+            { title: 'Bank Transfer', note: 'Rent', amount: -300.000, date: '2025-09-11 12:00', ref: 'BT-09111200' },
+            { title: 'Settlement', note: 'Payout', amount: +130.000, date: '2025-09-10 14:00', ref: 'SET-09101400' }
           ]
         }
       },
       // Current logged-in user email (for quick access)
-      currentUser: "finsecureapp@gmail.com",
+      currentUser: 'finsecureapp@gmail.com',
       pendingReset: false,
       pendingOTP: null
     };
@@ -99,10 +99,10 @@ const DEFAULT_DB = {
     function getCurrentUser() {
       if (!db.currentUser || !db.users[db.currentUser]) {
         // Fallback to first user or default
-        const firstUserEmail = Object.keys(db.users)[0] || "finsecureapp@gmail.com";
+        const firstUserEmail = Object.keys(db.users)[0] || 'finsecureapp@gmail.com';
         db.currentUser = firstUserEmail;
         if (!db.users[firstUserEmail]) {
-          db.users[firstUserEmail] = JSON.parse(JSON.stringify(DEFAULT_DB.users["finsecureapp@gmail.com"]));
+          db.users[firstUserEmail] = JSON.parse(JSON.stringify(DEFAULT_DB.users['finsecureapp@gmail.com']));
         }
       }
       return db.users[db.currentUser];
@@ -189,64 +189,64 @@ const DEFAULT_DB = {
     // - Keep them at top to make it easy to find UI wiring.
     // -----------------------
     const pages = {
-      login: document.getElementById("page-login"),
-      signup: document.getElementById("page-signup"),
-      reset: document.getElementById("page-reset"),
-      otp: document.getElementById("page-otp"),
-      dashboard: document.getElementById("page-dashboard"),
-      history: document.getElementById("page-history"),
-      terms: document.getElementById("page-terms"),
+      login: document.getElementById('page-login'),
+      signup: document.getElementById('page-signup'),
+      reset: document.getElementById('page-reset'),
+      otp: document.getElementById('page-otp'),
+      dashboard: document.getElementById('page-dashboard'),
+      history: document.getElementById('page-history'),
+      terms: document.getElementById('page-terms'),
     };
 
     // Brand nav control
-    const brandNav = document.getElementById("brand-nav");
-    const navLogout = document.getElementById("nav-logout");
-    const navLinks = document.querySelectorAll("[data-nav]");
+    const brandNav = document.getElementById('brand-nav');
+    const navLogout = document.getElementById('nav-logout');
+    const navLinks = document.querySelectorAll('[data-nav]');
 
     // Inputs / Buttons
-    const loginEmail = document.getElementById("login-email");
-    const loginPassword = document.getElementById("login-password");
-    const btnLogin = document.getElementById("btn-login");
-    const loginMessage = document.getElementById("login-message");
+    const loginEmail = document.getElementById('login-email');
+    const loginPassword = document.getElementById('login-password');
+    const btnLogin = document.getElementById('btn-login');
+    const loginMessage = document.getElementById('login-message');
 
-    const linkForgot = document.getElementById("link-forgot");
+    const linkForgot = document.getElementById('link-forgot');
     
     // Signup inputs
-    const suFirst = document.getElementById("su-first");
-    const suLast = document.getElementById("su-last");
-    const suEmail = document.getElementById("su-email");
-    const suPhone = document.getElementById("su-phone");
-    const suPassword = document.getElementById("su-password");
-    const suConfirm = document.getElementById("su-confirm");
-    const btnSignup = document.getElementById("btn-signup");
-    const signupMessage = document.getElementById("signup-message");
-    const signupSuccess = document.getElementById("signup-success");
+    const suFirst = document.getElementById('su-first');
+    const suLast = document.getElementById('su-last');
+    const suEmail = document.getElementById('su-email');
+    const suPhone = document.getElementById('su-phone');
+    const suPassword = document.getElementById('su-password');
+    const suConfirm = document.getElementById('su-confirm');
+    const btnSignup = document.getElementById('btn-signup');
+    const signupMessage = document.getElementById('signup-message');
+    const signupSuccess = document.getElementById('signup-success');
 
     // Reset inputs
-    const rpPassword = document.getElementById("rp-password");
-    const rpConfirm = document.getElementById("rp-confirm");
-    const btnReset = document.getElementById("btn-reset");
-    const resetMessage = document.getElementById("reset-message");
-    const resetSuccess = document.getElementById("reset-success");
+    const rpPassword = document.getElementById('rp-password');
+    const rpConfirm = document.getElementById('rp-confirm');
+    const btnReset = document.getElementById('btn-reset');
+    const resetMessage = document.getElementById('reset-message');
+    const resetSuccess = document.getElementById('reset-success');
 
     // OTP / MFA elements
-    const btnVerifyOTP = document.getElementById("btn-verify-otp");
-    const btnResendOTP = document.getElementById("btn-resend-otp");
-    const otpMessage = document.getElementById("otp-message");
-    const otpGrid = document.getElementById("otp-grid");
-    const otpHint = document.getElementById("otp-hint");
-    const otpTimer = document.getElementById("otp-timer");
+    const btnVerifyOTP = document.getElementById('btn-verify-otp');
+    const btnResendOTP = document.getElementById('btn-resend-otp');
+    const otpMessage = document.getElementById('otp-message');
+    const otpGrid = document.getElementById('otp-grid');
+    const otpHint = document.getElementById('otp-hint');
+    const otpTimer = document.getElementById('otp-timer');
 
     // Dashboard elements
-    const balanceValue = document.getElementById("balance-value");
-    const visaNumber = document.getElementById("visa-number");
-    const visaName = document.getElementById("visa-name");
+    const balanceValue = document.getElementById('balance-value');
+    const visaNumber = document.getElementById('visa-number');
+    const visaName = document.getElementById('visa-name');
 
     // Transaction search/list
-    const txSearch = document.getElementById("tx-search");
-    const btnSearch = document.getElementById("btn-search");
-    const txList = document.getElementById("tx-list");
-    const txCount = document.getElementById("tx-count");
+    const txSearch = document.getElementById('tx-search');
+    const btnSearch = document.getElementById('btn-search');
+    const txList = document.getElementById('tx-list');
+    const txCount = document.getElementById('tx-count');
 
     // App session mock (otp timer)
     let otpIntervalId = null;
@@ -257,18 +257,18 @@ const DEFAULT_DB = {
     // Helpers: clear sensitive inputs (improves security/UX)
     // -------------------------------------------------------
     function clearLoginInputs() {
-      loginPassword.value = "";
+      loginPassword.value = '';
     }
     function clearResetInputs() {
-      rpPassword.value = "";
-      rpConfirm.value = "";
+      rpPassword.value = '';
+      rpConfirm.value = '';
     }
     function clearSignupPasswords() {
-      suPassword.value = "";
-      suConfirm.value = "";
+      suPassword.value = '';
+      suConfirm.value = '';
     }
     function clearOtpInputs() {
-      Array.from(otpGrid.children).forEach(inp => inp.value = "");
+      Array.from(otpGrid.children).forEach(inp => inp.value = '');
     }
 
     // -------------------------------------------------------
@@ -276,12 +276,12 @@ const DEFAULT_DB = {
     // -------------------------------------------------------
     function updateBrandNavVisibility() {
       if (session.loggedIn) {
-        brandNav.style.display = "flex";
-        brandNav.removeAttribute("aria-hidden");
+        brandNav.style.display = 'flex';
+        brandNav.removeAttribute('aria-hidden');
       } else {
-        brandNav.style.display = "none";
+        brandNav.style.display = 'none';
         // Don't set aria-hidden when hidden - just use display:none
-        brandNav.removeAttribute("aria-hidden");
+        brandNav.removeAttribute('aria-hidden');
       }
     }
 
@@ -292,17 +292,17 @@ const DEFAULT_DB = {
     // - startOtpCountdown / cancelOtpTimer: manage resend cooldown UI
     // =======================
     function buildOTPInputs() {
-      otpGrid.innerHTML = "";
+      otpGrid.innerHTML = '';
       for (let i = 0; i < 6; i++) {
-        const inp = document.createElement("input");
-        inp.type = "text";
+        const inp = document.createElement('input');
+        inp.type = 'text';
         inp.maxLength = 1;
-        inp.className = "otp-input";
-        inp.inputMode = "numeric";
-        inp.autocomplete = "one-time-code";
+        inp.className = 'otp-input';
+        inp.inputMode = 'numeric';
+        inp.autocomplete = 'one-time-code';
 
         // When user types, automatically move to next input
-        inp.addEventListener("input", (e) => {
+        inp.addEventListener('input', (e) => {
           const val = e.target.value;
           if (val && val.length > 0) {
             const next = otpGrid.children[i + 1];
@@ -311,12 +311,12 @@ const DEFAULT_DB = {
         });
 
          // Handle backspace to move focus left (and clear)
-        inp.addEventListener("keydown", (e) => {
-          if (e.key === "Backspace" && !e.target.value) {
+        inp.addEventListener('keydown', (e) => {
+          if (e.key === 'Backspace' && !e.target.value) {
             const prev = otpGrid.children[i - 1];
             if (prev) {
               prev.focus();
-              prev.value = "";
+              prev.value = '';
             }
           }
         });
@@ -336,8 +336,8 @@ const DEFAULT_DB = {
           clearInterval(otpIntervalId);
           otpIntervalId = null;
           btnResendOTP.disabled = false;
-          otpTimer.textContent = "";
-          btnResendOTP.textContent = "Resend code";
+          otpTimer.textContent = '';
+          btnResendOTP.textContent = 'Resend code';
         } else {
           updateOtpTimerText();
         }
@@ -352,7 +352,7 @@ const DEFAULT_DB = {
     function sendOTP() {
       const code = String(Math.floor(100000 + Math.random() * 900000));
       db.pendingOTP = code;
-      otpMessage.style.display = "none";
+      otpMessage.style.display = 'none';
       const user = getCurrentUser();
       const targetEmail = session.email || user.email;
       otpHint.textContent = `A 6-digit code was sent to ${targetEmail}.`;
@@ -366,10 +366,10 @@ const DEFAULT_DB = {
     async function sendOtpEmail(targetEmail, code) {
       // Use server-side API only for security (no exposed tokens)
       try {
-        const res = await fetch("/api/send-otp", {
-          method: "POST",
+        const res = await fetch('/api/send-otp', {
+          method: 'POST',
           headers: {
-            "Content-Type": "application/json"
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify({ to: targetEmail, code })
         });
@@ -382,18 +382,18 @@ const DEFAULT_DB = {
           // Show more detailed error message to user
           otpHint.textContent = errorMsg;
           otpMessage.textContent = errorMsg;
-          otpMessage.style.display = "block";
+          otpMessage.style.display = 'block';
           return;
         }
 
         otpHint.textContent = `Code sent to ${targetEmail}. Check your inbox.`;
-        otpMessage.style.display = "none";
+        otpMessage.style.display = 'none';
       } catch (err) {
         // Failed to send OTP email:
-        const errorMsg = err.message || "We couldn't send the email. Please retry in a moment.";
+        const errorMsg = err.message || 'We couldn\'t send the email. Please retry in a moment.';
         otpHint.textContent = errorMsg;
         otpMessage.textContent = errorMsg;
-        otpMessage.style.display = "block";
+        otpMessage.style.display = 'block';
       }
     }
 
@@ -415,16 +415,16 @@ const DEFAULT_DB = {
     // -------------------------------------------------------
     function renderCard() {
       const user = getCurrentUser();
-      const name = session.loggedIn ? (user.first + " " + user.last).toUpperCase() : "MARK BLUE";
+      const name = session.loggedIn ? (user.first + ' ' + user.last).toUpperCase() : 'MARK BLUE';
       visaName.textContent = name;
-      visaNumber.textContent = "4242 68•• ••21 9012";
+      visaNumber.textContent = '4242 68•• ••21 9012';
     }
     function renderBalance() {
       const user = getCurrentUser();
       balanceValue.textContent = `BHD ${(user.balance || 0).toFixed(2)}`;
     }
-    function renderTransactions(filter = "") {
-      txList.innerHTML = "";
+    function renderTransactions(filter = '') {
+      txList.innerHTML = '';
       const user = getCurrentUser();
       const transactions = user.transactions || [];
       const data = transactions.filter(tx => {
@@ -434,27 +434,27 @@ const DEFAULT_DB = {
 
       // Build DOM nodes for each transaction (simple card)
       data.forEach(tx => {
-        const item = document.createElement("div");
-        item.className = "tx-item";
+        const item = document.createElement('div');
+        item.className = 'tx-item';
 
-        const icon = document.createElement("div");
-        icon.className = "tx-icon";
+        const icon = document.createElement('div');
+        icon.className = 'tx-icon';
         icon.textContent = tx.title.slice(0,2).toUpperCase();
 
-        const meta = document.createElement("div");
-        meta.className = "tx-meta";
-        const t = document.createElement("div");
-        t.className = "tx-title";
+        const meta = document.createElement('div');
+        meta.className = 'tx-meta';
+        const t = document.createElement('div');
+        t.className = 'tx-title';
         t.textContent = tx.title;
-        const s = document.createElement("div");
-        s.className = "tx-sub";
+        const s = document.createElement('div');
+        s.className = 'tx-sub';
         s.textContent = `${tx.note} • ${tx.date} • Ref: ${tx.ref}`;
         meta.appendChild(t);
         meta.appendChild(s);
 
-        const amt = document.createElement("div");
-        amt.className = "tx-amount " + (tx.amount < 0 ? "negative" : "positive");
-        amt.textContent = (tx.amount < 0 ? "-" : "+") + formatBHD(tx.amount);
+        const amt = document.createElement('div');
+        amt.className = 'tx-amount ' + (tx.amount < 0 ? 'negative' : 'positive');
+        amt.textContent = (tx.amount < 0 ? '-' : '+') + formatBHD(tx.amount);
 
         item.appendChild(icon);
         item.appendChild(meta);
@@ -485,9 +485,9 @@ const DEFAULT_DB = {
     // -------------------------------------------------------
     function showPage(name) {
         // Protected pages redirect to login when not authenticated
-      const protectedPages = ["dashboard", "history"];
+      const protectedPages = ['dashboard', 'history'];
       if (protectedPages.includes(name) && !session.loggedIn) {
-        location.hash = "#/login";
+        location.hash = '#/login';
         return;
       }
 
@@ -498,38 +498,38 @@ const DEFAULT_DB = {
       // Mark nav links active (if nav is visible)
       navLinks.forEach(link => {
         const href = link.getAttribute("href");
-        const target = href ? href.replace("#/", "") : "";
-        link.classList.toggle("active", target === name);
+        const target = href ? href.replace('#/', '') : '';
+        link.classList.toggle('active', target === name);
       });
 
        // Clear sensitive inputs on transitions to reduce leaked credentials in UI
-      if (name !== "login") {
+      if (name !== 'login') {
         clearLoginInputs();
       }
-      if (name !== "reset") {
+      if (name !== 'reset') {
         clearResetInputs();
       }
-      if (name !== "signup") {
+      if (name !== 'signup') {
         clearSignupPasswords();
       }
 
       // When leaving OTP page cancel timer and remove inputs
-      if (name !== "otp") {
+      if (name !== 'otp') {
         cancelOtpTimer();
         otpHint.textContent = "";
         if (otpGrid) otpGrid.innerHTML = "";
       }
 
       // Page-specific setup
-      if (name === "otp") {
+      if (name === 'otp') {
         buildOTPInputs();
         sendOTP();
       }
-      if (name === "dashboard") {
+      if (name === 'dashboard') {
         renderBalance();
         renderCard();
       }
-      if (name === "history") {
+      if (name === 'history') {
         renderTransactions();
       }
 
@@ -538,14 +538,14 @@ const DEFAULT_DB = {
 
     // Choose default route: if no hash and session.loggedIn show dashboard; otherwise login.
     function handleRoute() {
-      const hash = location.hash.replace("#/", "");
-      const name = hash || (session.loggedIn ? "dashboard" : "login");
+      const hash = location.hash.replace('#/', '');
+      const name = hash || (session.loggedIn ? 'dashboard' : 'login');
       showPage(name);
     }
 
     // Wire routing events
-    window.addEventListener("hashchange", handleRoute);
-    window.addEventListener("load", () => {
+    window.addEventListener('hashchange', handleRoute);
+    window.addEventListener('load', () => {
       // Load stored data or use defaults
       const stored = localStorage.getItem(STORAGE_DB_KEY);
       if (stored) {
@@ -566,9 +566,9 @@ const DEFAULT_DB = {
             delete parsed.transactions;
           }
           // Ensure default user exists
-          if (!parsed.users || !parsed.users["finsecureapp@gmail.com"]) {
+          if (!parsed.users || !parsed.users['finsecureapp@gmail.com']) {
             if (!parsed.users) parsed.users = {};
-            parsed.users["finsecureapp@gmail.com"] = JSON.parse(JSON.stringify(DEFAULT_DB.users["finsecureapp@gmail.com"]));
+            parsed.users['finsecureapp@gmail.com'] = JSON.parse(JSON.stringify(DEFAULT_DB.users['finsecureapp@gmail.com']));
           }
           // Load the parsed data
           loadDB();
@@ -604,13 +604,13 @@ const DEFAULT_DB = {
     // -------------------------------------------------------
 
     // Login button click handler
-    btnLogin.addEventListener("click", () => {
-      loginMessage.style.display = "none";
-      const email = (loginEmail.value || "").trim();
-      const pw = loginPassword.value || "";
+    btnLogin.addEventListener('click', () => {
+      loginMessage.style.display = 'none';
+      const email = (loginEmail.value || '').trim();
+      const pw = loginPassword.value || '';
 
       if (!email || !pw) {
-        loginMessage.textContent = "Please enter email and password.";
+        loginMessage.textContent = 'Please enter email and password.';
         loginMessage.style.display = "block";
         return;
       }
@@ -630,53 +630,53 @@ const DEFAULT_DB = {
         saveSession();
 
         if (user.mfaEnabled) {
-          location.hash = "#/otp";
+          location.hash = '#/otp';
         } else {
           session.loggedIn = true;
           saveSession();
           updateBrandNavVisibility();
-          location.hash = "#/dashboard";
+          location.hash = '#/dashboard';
         }
       } else {
-        loginMessage.textContent = "Invalid email or password.";
+        loginMessage.textContent = 'Invalid email or password.';
         loginMessage.style.display = "block";
         clearLoginInputs();
       }
     });
 
     // "Forgot password" handler: set pendingReset in db and go to reset page
-    linkForgot.addEventListener("click", (e) => {
+    linkForgot.addEventListener('click', (e) => {
       e.preventDefault();
       db.pendingReset = true;
       saveDB();
       clearResetInputs();
-      location.hash = "#/reset";
+      location.hash = '#/reset';
     });
 
     // Signup handler: validate, save to db and persist
-    btnSignup.addEventListener("click", () => {
-      signupMessage.style.display = "none";
-      signupSuccess.style.display = "none";
+    btnSignup.addEventListener('click', () => {
+      signupMessage.style.display = 'none';
+      signupSuccess.style.display = 'none';
 
-      const first = (suFirst.value || "").trim();
-      const last = (suLast.value || "").trim();
-      const email = (suEmail.value || "").trim();
-      const phone = (suPhone.value || "").trim();
-      const pw = suPassword.value || "";
-      const cf = suConfirm.value || "";
+      const first = (suFirst.value || '').trim();
+      const last = (suLast.value || '').trim();
+      const email = (suEmail.value || '').trim();
+      const phone = (suPhone.value || '').trim();
+      const pw = suPassword.value || '';
+      const cf = suConfirm.value || '';
 
       if (!first || !last || !email || !phone || !pw || !cf) {
-        signupMessage.textContent = "Please complete all fields.";
+        signupMessage.textContent = 'Please complete all fields.';
         signupMessage.style.display = "block";
         return;
       }
       if (!checkPasswordPolicy(pw)) {
-        signupMessage.textContent = "Password must be >= 12 characters and include uppercase, lowercase, number, and special character.";
+        signupMessage.textContent = 'Password must be >= 12 characters and include uppercase, lowercase, number, and special character.';
         signupMessage.style.display = "block";
         return;
       }
       if (pw !== cf) {
-        signupMessage.textContent = "Passwords do not match.";
+        signupMessage.textContent = 'Passwords do not match.';
         signupMessage.style.display = "block";
         return;
       }
@@ -707,31 +707,31 @@ const DEFAULT_DB = {
       db.currentUser = email;
       saveDB();
 
-      signupSuccess.textContent = "Signup successful. Redirecting to login...";
-      signupSuccess.style.display = "block";
+      signupSuccess.textContent = 'Signup successful. Redirecting to login...';
+      signupSuccess.style.display = 'block';
 
       setTimeout(() => {
-        suPassword.value = "";
-        suConfirm.value = "";
-        location.hash = "#/login";
+        suPassword.value = '';
+        suConfirm.value = '';
+        location.hash = '#/login';
       }, 1200);
     });
 
-    btnReset.addEventListener("click", () => {
-      resetMessage.style.display = "none";
-      resetSuccess.style.display = "none";
+    btnReset.addEventListener('click', () => {
+      resetMessage.style.display = 'none';
+      resetSuccess.style.display = 'none';
 
-      const pw = rpPassword.value || "";
-      const cf = rpConfirm.value || "";
+      const pw = rpPassword.value || '';
+      const cf = rpConfirm.value || '';
 
       if (!checkPasswordPolicy(pw)) {
-        resetMessage.textContent = "Password must be >= 12 characters and include uppercase, lowercase, number, and special character.";
-        resetMessage.style.display = "block";
+        resetMessage.textContent = 'Password must be >= 12 characters and include uppercase, lowercase, number, and special character.';
+        resetMessage.style.display = 'block';
         return;
       }
       if (pw !== cf) {
-        resetMessage.textContent = "Passwords do not match.";
-        resetMessage.style.display = "block";
+        resetMessage.textContent = 'Passwords do not match.';
+        resetMessage.style.display = 'block';
         return;
       }
 
@@ -740,26 +740,26 @@ const DEFAULT_DB = {
       db.pendingReset = false;
       saveDB();
 
-      resetSuccess.textContent = "Password reset successful. Redirecting to login...";
-      resetSuccess.style.display = "block";
+      resetSuccess.textContent = 'Password reset successful. Redirecting to login...';
+      resetSuccess.style.display = 'block';
 
       setTimeout(() => {
         clearResetInputs();
-        location.hash = "#/login";
+        location.hash = '#/login';
       }, 1200);
     });
 
-    btnVerifyOTP.addEventListener("click", () => {
-      otpMessage.style.display = "none";
-      const code = Array.from(otpGrid.children).map(i => i.value).join("");
+    btnVerifyOTP.addEventListener('click', () => {
+      otpMessage.style.display = 'none';
+      const code = Array.from(otpGrid.children).map(i => i.value).join('');
       if (code.length !== 6) {
-        otpMessage.textContent = "Please enter the 6-digit code.";
-        otpMessage.style.display = "block";
+        otpMessage.textContent = 'Please enter the 6-digit code.';
+        otpMessage.style.display = 'block';
         return;
       }
       if (code !== db.pendingOTP) {
-        otpMessage.textContent = "Incorrect code. Try again or resend.";
-        otpMessage.style.display = "block";
+        otpMessage.textContent = 'Incorrect code. Try again or resend.';
+        otpMessage.style.display = 'block';
         clearOtpInputs();
         return;
       }
@@ -775,14 +775,14 @@ const DEFAULT_DB = {
       location.hash = "#/dashboard";
     });
 
-    btnResendOTP.addEventListener("click", (e) => {
+    btnResendOTP.addEventListener('click', (e) => {
       e.preventDefault();
       if (btnResendOTP.disabled) return;
       sendOTP();
     });
 
     // Logout handler (top nav)
-    navLogout.addEventListener("click", (e) => {
+    navLogout.addEventListener('click', (e) => {
       e.preventDefault();
       session.loggedIn = false;
       session.email = null;
@@ -795,7 +795,7 @@ const DEFAULT_DB = {
       saveDB(); // persist cleared pendingOTP
       otpHint.textContent = "";
       updateBrandNavVisibility();
-      location.hash = "#/login";
+      location.hash = '#/login';
     });
 
     navLinks.forEach(link => {
@@ -805,7 +805,7 @@ const DEFAULT_DB = {
         const target = href.replace("#/", "");
         if ((target === "dashboard" || target === "history") && !session.loggedIn) {
           e.preventDefault();
-          location.hash = "#/login";
+          location.hash = '#/login';
         }
       });
     });

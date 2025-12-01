@@ -135,7 +135,7 @@ jobs:
 
     # Test Case: SAST with SonarCloud
     - name: SonarCloud Scan
-      uses: SonarSource/sonarqube-scan-action@v6
+      uses: SonarSource/sonarcloud-github-action@master
       env:
         GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -173,7 +173,7 @@ jobs:
       run: npm install -g snyk
     
     - name: Run Snyk Security Scan
-      uses: snyk/actions/node@v0.7.0
+      uses: snyk/actions/node@master
       continue-on-error: true
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
@@ -192,10 +192,10 @@ jobs:
         echo "Checking for Snyk results files..."
         ls -la *.json *.sarif 2>/dev/null || echo "No result files found"
         if [ -f "snyk-results.json" ]; then
-          echo "✅ snyk-results.json found"
+          echo "snyk-results.json found"
           cat snyk-results.json | head -20
         else
-          echo "❌ snyk-results.json not found"
+          echo "snyk-results.json not found"
         fi
 
     - name: Upload Snyk Results
@@ -284,7 +284,7 @@ jobs:
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: zap-report
+        name: zap-scan-results
         path: report_html.html
         retention-days: 30
       
