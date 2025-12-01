@@ -51,19 +51,6 @@
     "typescript": "^5.3.3"
   },
   "jest": {
-    "testEnvironment": "node",
-    "collectCoverageFrom": [
-      "server.js",
-      "public/app.js",
-      "!node_modules/**",
-      "!coverage/**",
-      "!test/**"
-    ],
-    "coverageDirectory": "coverage",
-    "coverageReporters": [
-      "text",
-      "lcov",
-      "html"
-    ]
+    "testEnvironment": "node"
   }
 }
