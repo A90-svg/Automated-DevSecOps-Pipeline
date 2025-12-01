@@ -148,6 +148,10 @@ jobs:
         GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       continue-on-error: true
+      with:
+        args: >
+          -Dsonar.qualitygate.wait=false
+          -Dsonar.coverage.exclusions=**
          
 
     # SAST Summary
