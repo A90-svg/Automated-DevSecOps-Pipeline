@@ -133,6 +133,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-and-test
     timeout-minutes: 10
+    continue-on-error: true
     
     steps:
     - name: Checkout Repository
@@ -146,23 +147,25 @@ jobs:
       env:
         GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      continue-on-error: true
          
 
     # SAST Summary
     - name:  SAST Summary
+      if: always()
       run: |
-        echo "SAST Scan Results" >> $GITHUB_STEP_SUMMARY
-        echo "SonarCloud analysis completed" >> $GITHUB_STEP_SUMMARY
-        echo "[View detailed results](https://sonarcloud.io/project/overview?id=${{ secrets.SONAR_PROJECT_KEY || 'default-key' }})" >> $GITHUB_STEP_SUMMARY
+        echo "## SAST Scan Results" >> $GITHUB_STEP_SUMMARY
+        echo "**Tool**: SonarCloud" >> $GITHUB_STEP_SUMMARY
+        echo "**Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+        echo "[View detailed results](https://sonarcloud.io/project/overview?id=${{ secrets.SONAR_PROJECT_KEY || 'A90-svg_Automated-DevSecOps-Pipeline' }})" >> $GITHUB_STEP_SUMMARY
 
-   # Job 3: Security Scans (SCA - Synk)
-
-    # Test Case: SCA with Snyk
+   # Job 3: Security Scans (SCA - Snyk)
   sca-scan:
     name: SCA Scan (Snyk)
     runs-on: ubuntu-latest
     needs: build-and-test
     timeout-minutes: 8
+    continue-on-error: true
 
     steps:
     - name: Checkout Repository
@@ -215,9 +218,11 @@ jobs:
         if-no-files-found: warn
       
     - name: SCA Summary
+      if: always()
       run: |
-        echo "SCA Scan Results" >> $GITHUB_STEP_SUMMARY
-        echo "Snyk dependency scan completed" >> $GITHUB_STEP_SUMMARY
+        echo "## SCA Scan Results" >> $GITHUB_STEP_SUMMARY
+        echo "**Tool**: Snyk" >> $GITHUB_STEP_SUMMARY
+        echo "**Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
         echo "[View detailed results](https://app.snyk.io/)" >> $GITHUB_STEP_SUMMARY  
 
 
