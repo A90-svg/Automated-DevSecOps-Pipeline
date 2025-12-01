@@ -238,7 +238,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-and-test
     if: github.event.inputs.run_dast != 'false'
-    timeout-minutes: 12 #15 is better, u can change this later
+    timeout-minutes: 12 
     
     steps:
     - name: Checkout Repository
