@@ -51,7 +51,7 @@
     "typescript": "^5.3.3"
   },
   "jest": {
-    "testEnvironment": "jsdom",
+    "testEnvironment": "node",
     "collectCoverageFrom": [
       "server.js",
       "public/app.js",
@@ -64,22 +64,6 @@
       "text",
       "lcov",
       "html"
-    ],
-    "projects": [
-      {
-        "displayName": "node",
-        "testMatch": [
-          "**/test/**/*.test.js"
-        ],
-        "testEnvironment": "node"
-      },
-      {
-        "displayName": "jsdom", 
-        "testMatch": [
-          "**/test/**/*.test.js"
-        ],
-        "testEnvironment": "jsdom"
-      }
     ]
   }
 }

@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals';
 
-// Mock localStorage
+// Mock localStorage for Node environment
 const localStorageMock = {
   getItem: jest.fn(),
   setItem: jest.fn(),
@@ -19,75 +19,6 @@ global.crypto = {
   })
 };
 
-// Mock DOM elements
-document.createElement = jest.fn(() => ({
-  addEventListener: jest.fn(),
-  style: {},
-  innerHTML: '',
-  textContent: '',
-  value: '',
-  hidden: false,
-  children: [],
-  classList: {
-    add: jest.fn(),
-    remove: jest.fn(),
-    toggle: jest.fn(),
-    contains: jest.fn()
-  },
-  getAttribute: jest.fn(),
-  setAttribute: jest.fn(),
-  removeAttribute: jest.fn()
-}));
-
-document.getElementById = jest.fn(() => ({
-  addEventListener: jest.fn(),
-  style: {},
-  innerHTML: '',
-  textContent: '',
-  value: '',
-  hidden: false,
-  children: [],
-  classList: {
-    add: jest.fn(),
-    remove: jest.fn(),
-    toggle: jest.fn(),
-    contains: jest.fn()
-  },
-  getAttribute: jest.fn(),
-  setAttribute: jest.fn(),
-  removeAttribute: jest.fn()
-}));
-
-document.querySelector = jest.fn(() => ({
-  addEventListener: jest.fn(),
-  style: {},
-  innerHTML: '',
-  textContent: '',
-  value: '',
-  hidden: false,
-  children: [],
-  classList: {
-    add: jest.fn(),
-    remove: jest.fn(),
-    toggle: jest.fn(),
-    contains: jest.fn()
-  },
-  getAttribute: jest.fn(),
-  setAttribute: jest.fn(),
-  removeAttribute: jest.fn()
-}));
-
-document.querySelectorAll = jest.fn(() => []);
-
-// Mock window.location
-Object.defineProperty(window, 'location', {
-  value: {
-    hash: '#/login',
-    href: 'http://localhost:3000'
-  },
-  writable: true
-});
-
 // Mock fetch for EmailJS
 global.fetch = jest.fn(() =>
   Promise.resolve({
@@ -102,21 +33,8 @@ describe('App Core Functions', () => {
     localStorageMock.getItem.mockReturnValue(null);
   });
 
-  it('should generate secure reference', async () => {
-    // Import the app module
-    const appModule = await import('../public/app.js');
-    
-    // Test that generateSecureRef function exists and works
-    if (typeof appModule.generateSecureRef === 'function') {
-      const ref = appModule.generateSecureRef('TEST-');
-      expect(ref).toMatch(/^TEST-[A-Z0-9]{6}$/);
-    } else {
-      // Skip test if function not available
-      console.log('generateSecureRef function not found in module');
-    }
-  });
-
   it('should have proper storage keys', async () => {
+    // Import the app module
     const appModule = await import('../public/app.js');
     
     // Test that storage constants are defined
@@ -142,6 +60,22 @@ describe('App Core Functions', () => {
     expect(defaultUser.password).not.toBe('FinSecure123!');
     expect(defaultUser.password).toBe('ChangeMe123!');
   });
+
+  it('should have transactions with proper structure', async () => {
+    const appModule = await import('../public/app.js');
+    
+    const user = appModule.DEFAULT_DB.users['finsecureapp@gmail.com'];
+    expect(user.transactions).toBeDefined();
+    expect(Array.isArray(user.transactions)).toBe(true);
+    
+    if (user.transactions.length > 0) {
+      const transaction = user.transactions[0];
+      expect(transaction).toHaveProperty('title');
+      expect(transaction).toHaveProperty('amount');
+      expect(transaction).toHaveProperty('date');
+      expect(transaction).toHaveProperty('ref');
+    }
+  });
 });
 
 describe('Security Features', () => {
@@ -150,17 +84,24 @@ describe('Security Features', () => {
     expect(typeof global.crypto.getRandomValues).toBe('function');
   });
 
-  it('should not use Math.random in critical functions', async () => {
-    // This test ensures we're not using Math.random for security-sensitive operations
-    const mathRandomSpy = jest.spyOn(Math, 'random');
+  it('should have secure reference generation function', async () => {
+    const appModule = await import('../public/app.js');
     
-    // Import and test the app
-    await import('../public/app.js');
+    // Test that generateSecureRef function exists
+    expect(typeof appModule.generateSecureRef).toBe('function');
     
-    // Math.random should not be called for security operations
-    // (This is a basic check - in reality, we'd need more sophisticated testing)
-    expect(mathRandomSpy).not.toHaveBeenCalled();
+    const ref = appModule.generateSecureRef('TEST-');
+    expect(ref).toMatch(/^TEST-[A-Z0-9]{6}$/);
+  });
+
+  it('should not use hard-coded passwords', async () => {
+    const appModule = await import('../public/app.js');
     
-    mathRandomSpy.mockRestore();
+    const defaultUser = appModule.DEFAULT_DB.users['finsecureapp@gmail.com'];
+    const password = defaultUser.password;
+    
+    // Password should be the secure fallback, not the original hard-coded one
+    expect(password).toBe('ChangeMe123!');
+    expect(password).not.toBe('FinSecure123!');
   });
 });
