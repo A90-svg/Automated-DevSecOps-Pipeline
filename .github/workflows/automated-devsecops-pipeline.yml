@@ -163,7 +163,7 @@ jobs:
         echo "**Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
         echo "[View detailed results](https://sonarcloud.io/project/overview?id=${{ secrets.SONAR_PROJECT_KEY || 'A90-svg_Automated-DevSecOps-Pipeline' }})" >> $GITHUB_STEP_SUMMARY
 
-   # Job 3: Security Scans (SCA - Snyk)
+   # Job 3: Security Scans (SCA - Snyk) #changes been made
   sca-scan:
     name: SCA Scan (Snyk)
     runs-on: ubuntu-latest
