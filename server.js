@@ -19,38 +19,42 @@ const httpServer = createServer(app);
 export { app };
 
 // Security middleware
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:"],
-      connectSrc: ["'self'", "https://api.emailjs.com"],
-      fontSrc: ["'self'"],
-      objectSrc: ["'none'"],
-      mediaSrc: ["'self'"],
-      frameSrc: ["'none'"],
-      frameAncestors: ["'none'"],
-      baseUri: ["'self'"],
-      formAction: ["'self'"],
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", 'data:'],
+        connectSrc: ["'self'", 'https://api.emailjs.com'],
+        fontSrc: ["'self'"],
+        objectSrc: ["'none'"],
+        mediaSrc: ["'self'"],
+        frameSrc: ["'none'"],
+        frameAncestors: ["'none'"],
+        baseUri: ["'self'"],
+        formAction: ["'self'"],
+      },
     },
-  },
-}));
-app.use(cors({
-  origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  preflightContinue: true,
-  optionsSuccessStatus: 200
-}));
+  })
+);
+app.use(
+  cors({
+    origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    preflightContinue: true,
+    optionsSuccessStatus: 200,
+  })
+);
 
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 1000, 
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
 });
 
 app.use(limiter);
@@ -63,7 +67,7 @@ const validateRequest = (schema) => (req, res, next) => {
   if (error) {
     return res.status(400).json({
       status: 'error',
-      message: error.details[0].message
+      message: error.details[0].message,
     });
   }
   next();
@@ -74,18 +78,20 @@ const errorHandler = (err, req, res, _next) => {
   res.status(500).json({
     status: 'error',
     message: 'Internal server error',
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
   });
 };
 
 // Serve static files with security headers
-app.use(express.static(join(__dirname, 'public'), {
-  setHeaders: (res) => {
-    res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('X-Frame-Options', 'DENY');
-    res.setHeader('X-XSS-Protection', '1; mode=block');
-  }
-}));
+app.use(
+  express.static(join(__dirname, 'public'), {
+    setHeaders: (res) => {
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      res.setHeader('X-Frame-Options', 'DENY');
+      res.setHeader('X-XSS-Protection', '1; mode=block');
+    },
+  })
+);
 
 // Request logging
 app.use((req, res, next) => {
@@ -93,22 +99,22 @@ app.use((req, res, next) => {
 });
 
 // ============================================
-// HEALTH ENDPOINT (REQUIRED FOR DOCKER & PIPELINE)
+// HEALTH ENDPOINT 
 // ============================================
 
-app.get("/health", (req, res) => {
-  res.status(200).json({ 
-    status: "healthy",
-    service: "FinSecure Demo App",
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'healthy',
+    service: 'FinSecure Demo App',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    environment: process.env.NODE_ENV || "development"
+    environment: process.env.NODE_ENV || 'development',
   });
 });
 
 // Serve index.html for root route
-app.get("/", (req, res) => {
-  res.sendFile(join(__dirname, "public", "index.html"));
+app.get('/', (req, res) => {
+  res.sendFile(join(__dirname, 'public', 'index.html'));
 });
 
 // EmailJS configuration
@@ -117,18 +123,25 @@ const EMAILJS_CONFIG = {
   templateId: process.env.EMAILJS_TEMPLATE_ID,
   publicKey: process.env.EMAILJS_PUBLIC_KEY,
   privateKey: process.env.EMAILJS_PRIVATE_KEY,
-  fromEmail: process.env.EMAILJS_FROM_EMAIL || 'noreply@finsecure.demo'
+  fromEmail: process.env.EMAILJS_FROM_EMAIL || 'noreply@finsecure.demo',
 };
 
 // Validate EmailJS configuration
 const isEmailJSConfigured = () => {
-  return EMAILJS_CONFIG.serviceId && EMAILJS_CONFIG.templateId && EMAILJS_CONFIG.publicKey && EMAILJS_CONFIG.privateKey;
+  return (
+    EMAILJS_CONFIG.serviceId &&
+    EMAILJS_CONFIG.templateId &&
+    EMAILJS_CONFIG.publicKey &&
+    EMAILJS_CONFIG.privateKey
+  );
 };
 
 // Request validation schema
 const otpSchema = Joi.object({
   to: Joi.string().email().required(),
-  code: Joi.string().pattern(/^\d{6}$/).required()
+  code: Joi.string()
+    .pattern(/^\d{6}$/)
+    .required(),
 });
 
 app.post('/api/send-otp', validateRequest(otpSchema), async (req, res, next) => {
@@ -137,9 +150,9 @@ app.post('/api/send-otp', validateRequest(otpSchema), async (req, res, next) => 
 
     // For demo purposes, if EmailJS is not configured, simulate success
     if (!isEmailJSConfigured()) {
-      return res.json({ 
+      return res.json({
         success: true,
-        message: 'Verification code sent successfully (demo mode)'
+        message: 'Verification code sent successfully (demo mode)',
       });
     }
 
@@ -154,32 +167,31 @@ app.post('/api/send-otp', validateRequest(otpSchema), async (req, res, next) => 
           otp_code: code,
           subject: 'Your FinSecure Verification Code',
           from_email: EMAILJS_CONFIG.fromEmail,
-          app_name: 'FinSecure'
-        }
+          app_name: 'FinSecure',
+        },
       };
-      
+
       const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(emailPayload)
+        body: JSON.stringify(emailPayload),
       });
-      
+
       if (!response.ok) {
-        return res.status(500).json({ 
-          error: 'Failed to send verification email. Please try again later.'
+        return res.status(500).json({
+          error: 'Failed to send verification email. Please try again later.',
         });
       }
 
-      res.json({ 
+      res.json({
         success: true,
-        message: 'Verification code sent successfully'
+        message: 'Verification code sent successfully',
       });
-      
     } catch (err) {
-      res.status(500).json({ 
-        error: 'An error occurred while sending the verification email.'
+      res.status(500).json({
+        error: 'An error occurred while sending the verification email.',
       });
     }
   } catch (err) {

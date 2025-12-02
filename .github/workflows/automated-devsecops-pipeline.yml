@@ -5,13 +5,13 @@
 # Supports: PDPL and CBB Cybersecurity Framework
 # ============================================
 
-name: Automated DevSecOps Pipeline 
+name: Automated DevSecOps Pipeline
 
 # Workflow trigger configuration
 on:
   # Trigger on push to main or develop branches
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
     # Ignore markdown and text files to prevent unnecessary builds
     paths-ignore:
       - '**/*.md'
@@ -20,7 +20,7 @@ on:
       - '.github/**'
       - 'LICENSE'
 
-  # Trigger on pull requests targeting main 
+  # Trigger on pull requests targeting main
   pull_request:
     branches: [main]
     types: [opened, synchronize, reopened]
@@ -47,85 +47,85 @@ jobs:
     runs-on: ubuntu-latest
     # Set a timeout to prevent hanging builds
     timeout-minutes: 15
-    
+
     steps:
-    # Checkout the repository code
-    - name: Checkout Repository
-      uses: actions/checkout@v4
-      with:
-        # Full history needed for SonarCloud analysis
-        fetch-depth: 0
-        # Token for GitHub API access
-        token: ${{ secrets.GIT_TOKEN }}
-    
-    # Set up Node.js environment
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        # Specify Node.js version
-        node-version: ${{ env.NODE_VERSION }}
-        # Cache npm dependencies for faster builds
-        cache: 'npm'
-    
-    # Install project dependencies
-    - name: Install dependencies
-      run: npm ci  # or npm install(this is more acurate)
-    
-    - name: Upload Node Modules
-      uses: actions/upload-artifact@v4
-      with:
-        name: node-modules
-        path: ./node_modules
-        retention-days: 1
-  
-    # Run Tests | for the run command u can use : npm run test
-    - name:  Run Tests
-      run: |
-        echo "Running unit tests..."
-        npm test 
-      continue-on-error: true # u can delete this
-    
-    # Run Lint code
-    - name: Run Linting
-      run: |
-        echo "Running linter..."
-        npm run lint
-      continue-on-error: true
-    
-    # Set up Docker
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
+      # Checkout the repository code
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          # Full history needed for SonarCloud analysis
+          fetch-depth: 0
+          # Token for GitHub API access
+          token: ${{ secrets.GIT_TOKEN }}
 
-    # Build Docker Image
-    - name: Build Docker Image
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        file: ./Dockerfile
-        push: false
-        load: true
-        tags: ${{ env.DOCKER_IMAGE_NAME }}:${{ github.sha }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+      # Set up Node.js environment
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          # Specify Node.js version
+          node-version: ${{ env.NODE_VERSION }}
+          # Cache npm dependencies for faster builds
+          cache: 'npm'
 
-    # Save Docker Image
-    - name: Save Docker Image
-      run: docker save ${{ env.DOCKER_IMAGE_NAME }}:${{ github.sha }} > /tmp/docker-image.tar
+      # Install project dependencies
+      - name: Install dependencies
+        run: npm ci # or npm install(this is more acurate)
 
-    # Upload Docker Image
-    - name:  Upload Docker Image
-      uses: actions/upload-artifact@v4
-      with:
-        name: docker-image
-        path: /tmp/docker-image.tar
-        retention-days: 1
+      - name: Upload Node Modules
+        uses: actions/upload-artifact@v4
+        with:
+          name: node-modules
+          path: ./node_modules
+          retention-days: 1
 
-    # Build a summary
-    - name: Build Summary
-      run: |
-        echo "Build Summary" >> $GITHUB_STEP_SUMMARY
-        echo "Dependencies installed" >> $GITHUB_STEP_SUMMARY
-        echo "Docker image built: \`${{ env.DOCKER_IMAGE_NAME }}:${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+      # Run Tests | for the run command u can use : npm run test
+      - name: Run Tests
+        run: |
+          echo "Running unit tests..."
+          npm test
+        continue-on-error: true # u can delete this
+
+      # Run Lint code
+      - name: Run Linting
+        run: |
+          echo "Running linter..."
+          npm run lint
+        continue-on-error: true
+
+      # Set up Docker
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Build Docker Image
+      - name: Build Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          load: true
+          tags: ${{ env.DOCKER_IMAGE_NAME }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Save Docker Image
+      - name: Save Docker Image
+        run: docker save ${{ env.DOCKER_IMAGE_NAME }}:${{ github.sha }} > /tmp/docker-image.tar
+
+      # Upload Docker Image
+      - name: Upload Docker Image
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-image
+          path: /tmp/docker-image.tar
+          retention-days: 1
+
+      # Build a summary
+      - name: Build Summary
+        run: |
+          echo "Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "Dependencies installed" >> $GITHUB_STEP_SUMMARY
+          echo "Docker image built: \`${{ env.DOCKER_IMAGE_NAME }}:${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
 
   # Job 2: Security Scans (SAST - SonarCloud)
   sast-scan:
@@ -134,36 +134,35 @@ jobs:
     needs: build-and-test
     timeout-minutes: 10
     continue-on-error: true
-    
+
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-    # Test Case: SAST with SonarCloud
-    - name: SonarCloud Scan
-      uses: SonarSource/sonarqube-scan-action@v6
-      env:
-        GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      continue-on-error: true
-      with:
-        args: >
-          -Dsonar.qualitygate.wait=false
-          -Dsonar.coverage.exclusions=**
-         
+      # Test Case: SAST with SonarCloud
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarqube-scan-action@v6
+        env:
+          GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        continue-on-error: true
+        with:
+          args: >
+            -Dsonar.qualitygate.wait=false
+            -Dsonar.coverage.exclusions=**
 
-    # SAST Summary
-    - name:  SAST Summary
-      if: always()
-      run: |
-        echo "## SAST Scan Results" >> $GITHUB_STEP_SUMMARY
-        echo "**Tool**: SonarCloud" >> $GITHUB_STEP_SUMMARY
-        echo "**Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
-        echo "[View detailed results](https://sonarcloud.io/project/overview?id=${{ secrets.SONAR_PROJECT_KEY || 'A90-svg_Automated-DevSecOps-Pipeline' }})" >> $GITHUB_STEP_SUMMARY
+      # SAST Summary
+      - name: SAST Summary
+        if: always()
+        run: |
+          echo "## SAST Scan Results" >> $GITHUB_STEP_SUMMARY
+          echo "**Tool**: SonarCloud" >> $GITHUB_STEP_SUMMARY
+          echo "**Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "[View detailed results](https://sonarcloud.io/project/overview?id=${{ secrets.SONAR_PROJECT_KEY || 'A90-svg_Automated-DevSecOps-Pipeline' }})" >> $GITHUB_STEP_SUMMARY
 
-   # Job 3: Security Scans (SCA - Snyk) 
+    # Job 3: Security Scans (SCA - Snyk)
   sca-scan:
     name: SCA Scan (Snyk)
     runs-on: ubuntu-latest
@@ -171,62 +170,61 @@ jobs:
     timeout-minutes: 8
 
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v4
-      
-    - name: Download Dependencies
-      uses: actions/download-artifact@v4
-      with:
-        name: node-modules
-        path: ./node_modules
-      
-    - name: Install Snyk CLI
-      run: npm install -g snyk
-    
-    - name: Run Snyk Security Scan
-      uses: snyk/actions/node@master
-      env:
-        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-      with:
-        args: --severity-threshold=high --json-file-output=snyk-results.json --sarif-file-output=snyk-results.sarif
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-    - name: Fallback Snyk Scan (if action fails)
-      if: failure()
-      run: |
-        echo "Running fallback Snyk scan..."
-        snyk test --json > snyk-results.json || true
-        snyk test --sarif > snyk-results.sarif || true
+      - name: Download Dependencies
+        uses: actions/download-artifact@v4
+        with:
+          name: node-modules
+          path: ./node_modules
 
-    - name: Check Snyk Results File
-      run: |
-        echo "Checking for Snyk results files..."
-        ls -la *.json *.sarif 2>/dev/null || echo "No result files found"
-        if [ -f "snyk-results.json" ]; then
-          echo "snyk-results.json found"
-          cat snyk-results.json | head -20
-        else
-          echo "snyk-results.json not found"
-        fi
+      - name: Install Snyk CLI
+        run: npm install -g snyk
 
-    - name: Upload Snyk Results
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: snyk-results
-        path: |
-          snyk-results.json
-          snyk-results.sarif
-        retention-days: 30
-        if-no-files-found: warn
-      
-    - name: SCA Summary
-      if: always()
-      run: |
-        echo "## SCA Scan Results" >> $GITHUB_STEP_SUMMARY
-        echo "**Tool**: Snyk" >> $GITHUB_STEP_SUMMARY
-        echo "**Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
-        echo "[View detailed results](https://app.snyk.io/)" >> $GITHUB_STEP_SUMMARY  
+      - name: Run Snyk Security Scan
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high --json-file-output=snyk-results.json --sarif-file-output=snyk-results.sarif
 
+      - name: Fallback Snyk Scan (if action fails)
+        if: failure()
+        run: |
+          echo "Running fallback Snyk scan..."
+          snyk test --json > snyk-results.json || true
+          snyk test --sarif > snyk-results.sarif || true
+
+      - name: Check Snyk Results File
+        run: |
+          echo "Checking for Snyk results files..."
+          ls -la *.json *.sarif 2>/dev/null || echo "No result files found"
+          if [ -f "snyk-results.json" ]; then
+            echo "snyk-results.json found"
+            cat snyk-results.json | head -20
+          else
+            echo "snyk-results.json not found"
+          fi
+
+      - name: Upload Snyk Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: snyk-results
+          path: |
+            snyk-results.json
+            snyk-results.sarif
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: SCA Summary
+        if: always()
+        run: |
+          echo "## SCA Scan Results" >> $GITHUB_STEP_SUMMARY
+          echo "**Tool**: Snyk" >> $GITHUB_STEP_SUMMARY
+          echo "**Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "[View detailed results](https://app.snyk.io/)" >> $GITHUB_STEP_SUMMARY
 
     # Job 4: Security Scans (DAST - OWASP ZAP)
 
@@ -237,80 +235,80 @@ jobs:
     needs: build-and-test
     if: github.event.inputs.run_dast != 'false'
     timeout-minutes: 15
-    
+
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v4
-      
-    - name: Download Docker Image
-      uses: actions/download-artifact@v4
-      with:
-        name: docker-image
-        path: /tmp
-      
-    - name: Load Docker Image
-      run: docker load < /tmp/docker-image.tar
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-    - name: Start Application
-      run: |
-        docker run -d \
-          -p 3000:3000 \
-          --name finsecure-app \
-          -e NODE_ENV=production \
-          -e PORT=3000 \
-          -e EMAILJS_SERVICE_ID=${{ secrets.EMAILJS_SERVICE_ID }} \
-          -e EMAILJS_TEMPLATE_ID=${{ secrets.EMAILJS_TEMPLATE_ID }} \
-          -e EMAILJS_PUBLIC_KEY=${{ secrets.EMAILJS_PUBLIC_KEY }} \
-          -e EMAILJS_PRIVATE_KEY=${{ secrets.EMAILJS_PRIVATE_KEY }} \
-          -e ALLOWED_ORIGINS=${{ secrets.ALLOWED_ORIGINS }} \
-          ${{ env.DOCKER_IMAGE_NAME }}:${{ github.sha }}
-          
-        echo "Waiting for application to start..."
-        sleep 30  
-        
-        # Health check
-        for i in {1..10}; do
-         if curl -s http://localhost:3000/health > /dev/null 2>&1; then
-            echo "Application is healthy"
-            break
-          fi
-          echo "Waiting... ($i/10)"
-            sleep 5
-          if [ $i -eq 10 ]; then
-            echo "Application failed to start"
-            docker logs finsecure-app
-            exit 1
-          fi
-          done
-      
-    - name: OWASP ZAP Baseline Scan
-      uses: zaproxy/action-baseline@v0.12.0
-      with:
-        target: 'http://localhost:3000'
-        rules_file_name: '.zap/rules.tsv'
-        cmd_options: '-a -j'
-        allow_issue_writing: false
-      continue-on-error: true
+      - name: Download Docker Image
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-image
+          path: /tmp
 
-    - name: Upload ZAP Report
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: zap-scan-results
-        path: report_html.html
-        retention-days: 30
-      
-    - name: Stop Application
-      if: always()
-      run: |
-        docker stop finsecure-app || true
-        docker rm finsecure-app || true
-      
-    - name: DAST Summary
-      run: |
-        echo "DAST Scan Results" >> $GITHUB_STEP_SUMMARY
-        echo "OWASP ZAP baseline scan completed" >> $GITHUB_STEP_SUMMARY
-        echo "Report uploaded as artifact" >> $GITHUB_STEP_SUMMARY
+      - name: Load Docker Image
+        run: docker load < /tmp/docker-image.tar
+
+      - name: Start Application
+        run: |
+          docker run -d \
+            -p 3000:3000 \
+            --name finsecure-app \
+            -e NODE_ENV=production \
+            -e PORT=3000 \
+            -e EMAILJS_SERVICE_ID=${{ secrets.EMAILJS_SERVICE_ID }} \
+            -e EMAILJS_TEMPLATE_ID=${{ secrets.EMAILJS_TEMPLATE_ID }} \
+            -e EMAILJS_PUBLIC_KEY=${{ secrets.EMAILJS_PUBLIC_KEY }} \
+            -e EMAILJS_PRIVATE_KEY=${{ secrets.EMAILJS_PRIVATE_KEY }} \
+            -e ALLOWED_ORIGINS=${{ secrets.ALLOWED_ORIGINS }} \
+            ${{ env.DOCKER_IMAGE_NAME }}:${{ github.sha }}
+            
+          echo "Waiting for application to start..."
+          sleep 30  
+
+          # Health check
+          for i in {1..10}; do
+           if curl -s http://localhost:3000/health > /dev/null 2>&1; then
+              echo "Application is healthy"
+              break
+            fi
+            echo "Waiting... ($i/10)"
+              sleep 5
+            if [ $i -eq 10 ]; then
+              echo "Application failed to start"
+              docker logs finsecure-app
+              exit 1
+            fi
+            done
+
+      - name: OWASP ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.12.0
+        with:
+          target: 'http://localhost:3000'
+          rules_file_name: '.zap/rules.tsv'
+          cmd_options: '-a -j'
+          allow_issue_writing: false
+        continue-on-error: true
+
+      - name: Upload ZAP Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: zap-scan-results
+          path: report_html.html
+          retention-days: 30
+
+      - name: Stop Application
+        if: always()
+        run: |
+          docker stop finsecure-app || true
+          docker rm finsecure-app || true
+
+      - name: DAST Summary
+        run: |
+          echo "DAST Scan Results" >> $GITHUB_STEP_SUMMARY
+          echo "OWASP ZAP baseline scan completed" >> $GITHUB_STEP_SUMMARY
+          echo "Report uploaded as artifact" >> $GITHUB_STEP_SUMMARY
 
     # Job 5: Security Gate
 
@@ -319,7 +317,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [sast-scan, sca-scan, dast-scan]
     if: always()
-    
+
     steps:
       - name: Evaluate Security Results
         run: |
@@ -360,7 +358,7 @@ jobs:
             
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Security Gate Status: $GATE_STATUS" >> $GITHUB_STEP_SUMMARY
-          
+
           if [ "$HIGH_SEVERITY_FOUND" == "true" ]; then
             echo " MERGE BLOCKED: High severity vulnerabilities detected in dependencies (CVSS ≥ 7.0)" >> $GITHUB_STEP_SUMMARY
             echo "Action Required: Fix all high severity findings before merging" >> $GITHUB_STEP_SUMMARY
@@ -425,12 +423,12 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build-and-test, sast-scan, sca-scan, dast-scan, security-gate, deploy-compose]
     if: always()
-    
+
     steps:
       - name: Generate Executive Report
         run: |
           cat << 'EOF' >> $GITHUB_STEP_SUMMARY
-          
+
           # FinSecure DevSecOps Pipeline Report
 
           ## Pipeline Information
@@ -441,7 +439,7 @@ jobs:
           | **Branch** | `${{ github.ref_name }}` |
           | **Actor** | @${{ github.actor }} |
           | **Event** | `${{ github.event_name }}` |
-          
+
           ## Security Scan Summary
           | Scan | Tool | Status |
           |------|------|--------|
@@ -450,24 +448,18 @@ jobs:
           | DAST | OWASP ZAP | ${{ needs.dast-scan.result == 'success' && 'Passed' || needs.dast-scan.result == 'skipped' && 'Skipped' || 'Review' }} |
 
           ## Compliance Status
-          
+
           ### PDPL Compliance
           - Secrets encrypted via GitHub Secrets
           - No personal data in logs
           - Mock data used for testing
-          
+
           ### CBB Cybersecurity Framework
           - Automated security testing
           - Vulnerability scanning
           - Access controls enabled
           - Audit trail maintained
-          
+
           ---
           *Generated by FinSecure Application's Automated DevSecOps Pipeline*
           EOF
-          
-
-
-    
-
-    

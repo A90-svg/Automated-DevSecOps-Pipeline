@@ -7,16 +7,17 @@ Automated DevSecOps pipeline for a demo fintech application, demonstrating SAST,
 This project implements a comprehensive DevSecOps pipeline for the demo fintech app called FinSecure, demonstrating secure software development practices including:
 
 - **SAST** (Static Application Security Testing) with SonarCloud
-- **SCA** (Software Composition Analysis) with Snyk  
+- **SCA** (Software Composition Analysis) with Snyk
 - **DAST** (Dynamic Application Security Testing) with OWASP ZAP
 - **Docker** containerization with security best practices
 - **PDPL** and **CBB Cybersecurity Framework** compliance
 - **Security Gates** with merge blocking for high-severity vulnerabilities
 - **Automated Reporting** with severity levels and compliance metrics
 
-## Scope 
+## Scope
 
 **In-Scope:**
+
 - Automated DevSecOps pipeline using GitHub Actions
 - Free/open-source security tools (SonarCloud, Snyk, OWASP ZAP)
 - Demo fintech app (FinSecure) with basic features
@@ -25,6 +26,7 @@ This project implements a comprehensive DevSecOps pipeline for the demo fintech 
 - Compliance reporting (PDPL, CBB Framework)
 
 **Out-of-Scope:**
+
 - Production-grade fintech system
 - Real financial transactions
 - Paid enterprise tools
@@ -42,12 +44,14 @@ This project implements a comprehensive DevSecOps pipeline for the demo fintech 
 ## Installation
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/A90-svg/Automated-DevSecOps-Pipeline.git
    cd Automated-DevSecOps-Pipeline
    ```
 
 2. Install dependencies:
+
    ```bash
    npm ci
    ```
@@ -112,6 +116,7 @@ npm start
 ### Using Docker
 
 1. Build the Docker image:
+
    ```bash
    docker build -t finsecure-app .
    ```
@@ -146,6 +151,7 @@ npm run security:audit
 The GitHub Actions workflow (`.github/workflows/automated-devsecops-pipeline.yml`) includes:
 
 ### Pipeline Stages
+
 1. **Build and Test** (~5 minutes)
    - Node.js 22.20.0 setup
    - Dependency installation
@@ -169,6 +175,7 @@ The GitHub Actions workflow (`.github/workflows/automated-devsecops-pipeline.yml
    - PDPL and CBB Framework compliance status
 
 ### Pipeline Performance
+
 - **Total runtime**: ≤15 minutes
 - **Automated triggers**: Push to main/develop, Pull requests
 - **Manual trigger**: workflow_dispatch available
@@ -179,7 +186,7 @@ The GitHub Actions workflow (`.github/workflows/automated-devsecops-pipeline.yml
 This application includes several security measures:
 
 - **SAST**: SonarCloud integration for static code analysis
-- **SCA**: Snyk for dependency vulnerability scanning  
+- **SCA**: Snyk for dependency vulnerability scanning
 - **DAST**: OWASP ZAP for dynamic application security testing
 - **Secrets Management**: GitHub Secrets with automatic masking
 - **Docker Security**: Non-root user, minimal Alpine base image
@@ -190,12 +197,14 @@ This application includes several security measures:
 ## Compliance
 
 ### PDPL (Bahrain Personal Data Protection Law)
+
 - ✅ Synthetic data only (no personal information)
 - ✅ Secure credential management via GitHub Secrets
 - ✅ Audit trail maintained in pipeline logs
 - ✅ Data minimization principles applied
 
 ### CBB Cybersecurity Framework
+
 - ✅ Automated security testing implemented
 - ✅ Access controls via branch protection
 - ✅ Vulnerability management and scanning
@@ -312,8 +321,9 @@ This application includes several security measures:
 ## Demo Application Features
 
 The FinSecure demo app includes:
+
 - **Login/Signup**: Email-based authentication
-- **OTP Verification**: EmailJS integration 
+- **OTP Verification**: EmailJS integration
 - **Dashboard**: Account balance display
 - **Transaction History**: 50+ mock transactions
 - **Logout**: Session management
@@ -322,12 +332,14 @@ The FinSecure demo app includes:
 ## Quality Metrics
 
 ### Performance Requirements Met
+
 - ✅ **SAST completion**: ≤10 minutes (actual: ~3 minutes)
-- ✅ **DAST completion**: ≤15 minutes (actual: ~8 minutes)  
+- ✅ **DAST completion**: ≤15 minutes (actual: ~8 minutes)
 - ✅ **Docker build**: ≤5 minutes (actual: ~2 minutes)
 - ✅ **Pipeline runtime**: ≤15 minutes (actual: ~13 minutes)
 
 ### Security Requirements Met
+
 - ✅ **Automated scanning**: On every push/PR
 - ✅ **Severity reporting**: High/Medium/Low classification
 - ✅ **Merge blocking**: High-severity vulnerabilities
@@ -347,20 +359,24 @@ This builds and runs the application with all dependencies.
 ### Common Issues
 
 **Pipeline fails on SAST scan:**
+
 - Verify SONAR_TOKEN is correct
 - Check SonarCloud organization access
 - Ensure project key matches
 
 **Pipeline fails on SCA scan:**
+
 - Verify SNYK_TOKEN is valid
 - Check Snyk account permissions
 
 **Docker build fails:**
+
 - Ensure Node.js 22.20.0 compatibility
 - Check Docker daemon is running
 - Verify .dockerignore isn't excluding needed files
 
 **Application won't start:**
+
 - Check .env file configuration
 - Verify port 3000 is available
 - Review server logs for errors

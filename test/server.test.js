@@ -21,23 +21,19 @@ describe('Server', () => {
   });
 
   it('should handle OTP endpoint with valid data', async () => {
-    const response = await request(app)
-      .post('/api/send-otp')
-      .send({
-        to: 'finsecureapp@gmail.com',
-        code: '123456'
-      });
+    const response = await request(app).post('/api/send-otp').send({
+      to: 'finsecureapp@gmail.com',
+      code: '123456',
+    });
     expect(response.statusCode).toBe(200);
     expect(response.body).toHaveProperty('success', true);
   });
 
   it('should reject OTP endpoint with invalid data', async () => {
-    const response = await request(app)
-      .post('/api/send-otp')
-      .send({
-        to: 'invalid-email',
-        code: '123'
-      });
+    const response = await request(app).post('/api/send-otp').send({
+      to: 'invalid-email',
+      code: '123',
+    });
     expect(response.statusCode).toBe(400);
   });
 
