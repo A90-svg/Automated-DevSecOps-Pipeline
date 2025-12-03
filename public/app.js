@@ -80,10 +80,11 @@ const DEFAULT_DB = {
       phone: '33344455', // Phone number
       password: (() => {
         // Check for environment variable first
-        const envPassword = typeof import.meta.env !== 'undefined' && import.meta.env.VITE_DEFAULT_PASSWORD
-          ? import.meta.env.VITE_DEFAULT_PASSWORD
-          : null;
-        
+        const envPassword =
+          typeof import.meta.env !== 'undefined' && import.meta.env.VITE_DEFAULT_PASSWORD
+            ? import.meta.env.VITE_DEFAULT_PASSWORD
+            : null;
+
         // Return environment password or default demo password
         return envPassword || 'FinSecure123!';
       })(), // Default password (demo only)
