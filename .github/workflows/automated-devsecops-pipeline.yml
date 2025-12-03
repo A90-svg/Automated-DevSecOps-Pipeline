@@ -184,8 +184,8 @@ jobs:
           args: >
             -Dsonar.qualitygate.wait=false
             -Dsonar.coverage.exclusions=**
-            -Dsonar.projectKey=A90-svg_Automated-DevSecOps-Pipeline
-            -Dsonar.organization=A90-svg
+            -Dsonar.projectKey=automated-devsecops-pipeline
+            -Dsonar.organization=default-organization
             -Dsonar.host.url=https://sonarcloud.io
 
       # Generate SAST summary report
@@ -195,7 +195,7 @@ jobs:
           echo "## SAST Scan Results" >> $GITHUB_STEP_SUMMARY
           echo "**Tool**: SonarCloud" >> $GITHUB_STEP_SUMMARY
           echo "**Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
-          echo "[View detailed results](https://sonarcloud.io/project/overview?id=${{ secrets.SONAR_PROJECT_KEY || 'A90-svg_Automated-DevSecOps-Pipeline' }})" >> $GITHUB_STEP_SUMMARY
+          echo "[View detailed results](https://sonarcloud.io/project/overview?id=automated-devsecops-pipeline)" >> $GITHUB_STEP_SUMMARY
 
   # ============================================
   # JOB 3: SOFTWARE COMPOSITION ANALYSIS (SCA)
@@ -421,7 +421,7 @@ jobs:
           EMAIL_PRIVATE_KEY="${{ secrets.EMAILJS_PRIVATE_KEY }}"
           ALLOWED_ORIGINS_VAL="${{ secrets.ALLOWED_ORIGINS }}"
           
-          docker run -d --name finsecure-app \
+          docker run -d --name finsecure-app -p 3000:3000 \
             -e NODE_ENV=production \
             -e PORT=3000 \
             -e EMAILJS_SERVICE_ID="$EMAIL_SERVICE_ID" \
