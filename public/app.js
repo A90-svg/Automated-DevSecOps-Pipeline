@@ -61,6 +61,7 @@ function generateSecureRef(prefix) {
   return prefix + array[0].toString(36).slice(2, 8).toUpperCase();
 }
 
+// =====================================
 // DEFAULT DATABASE STRUCTURE
 // =====================================
 // This defines the initial state when no data exists in localStorage.
