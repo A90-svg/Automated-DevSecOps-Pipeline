@@ -184,9 +184,21 @@ jobs:
           args: >
             -Dsonar.qualitygate.wait=false
             -Dsonar.coverage.exclusions=**
-            -Dsonar.projectKey=automated-devsecops-pipeline
-            -Dsonar.organization=default-organization
+            -Dsonar.projectKey=A90-svg_Automated-DevSecOps-Pipeline
+            -Dsonar.organization=A90-svg
             -Dsonar.host.url=https://sonarcloud.io
+            -Dsonar.sources=.
+            -Dsonar.inclusions=**/*.js
+
+      # Debug SonarCloud configuration
+      - name: Debug SonarCloud Setup
+        if: failure()
+        run: |
+          echo "SonarCloud debug information:"
+          echo "Project files found:"
+          find . -name "*.js" -not -path "./node_modules/*" | head -10
+          echo "SonarCloud configuration:"
+          cat sonar-project.properties || echo "No sonar-project.properties found"
 
       # Generate SAST summary report
       - name: SAST Summary
@@ -195,7 +207,7 @@ jobs:
           echo "## SAST Scan Results" >> $GITHUB_STEP_SUMMARY
           echo "**Tool**: SonarCloud" >> $GITHUB_STEP_SUMMARY
           echo "**Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
-          echo "[View detailed results](https://sonarcloud.io/project/overview?id=automated-devsecops-pipeline)" >> $GITHUB_STEP_SUMMARY
+          echo "[View detailed results](https://sonarcloud.io/project/overview?id=${{ secrets.SONAR_PROJECT_KEY || 'A90-svg_Automated-DevSecOps-Pipeline' }})" >> $GITHUB_STEP_SUMMARY
 
   # ============================================
   # JOB 3: SOFTWARE COMPOSITION ANALYSIS (SCA)
@@ -461,6 +473,21 @@ jobs:
           cmd_options: '-a -j'
           allow_issue_writing: false
 
+      # Check if ZAP report was generated
+      # Debug step to ensure report file exists
+      - name: Check ZAP Report File
+        if: always()
+        run: |
+          echo "Checking for ZAP report files..."
+          ls -la *.html *.json *.xml 2>/dev/null || echo "No ZAP report files found"
+          if [ -f "report_html.html" ]; then
+            echo "ZAP HTML report found: report_html.html"
+            ls -la report_html.html
+          else
+            echo "ZAP HTML report not found, checking for other report files..."
+            find . -name "*.html" -o -name "*.json" -o -name "*.xml" | head -10
+          fi
+
       # Upload ZAP scan report as artifact
       # Preserves DAST results for 30 days for compliance
       - name: Upload ZAP Report
@@ -470,6 +497,7 @@ jobs:
           name: zap-scan-results
           path: report_html.html
           retention-days: 30
+          if-no-files-found: warn
 
       # Clean up Docker container
       # Ensures proper cleanup regardless of scan outcome
