@@ -189,6 +189,8 @@ jobs:
             -Dsonar.projectKey=A90-svg_Automated-DevSecOps-Pipeline
             -Dsonar.organization=A90-svg
             -Dsonar.host.url=https://sonarcloud.io
+            -Dsonar.newCodeDefinition=use_previous_tag_as_baseline
+            -Dsonar.newCodePeriod=3d
 
       # Generate SAST summary report
       - name: SAST Summary
@@ -283,43 +285,74 @@ jobs:
               .meta { color: #7f8c8d; font-size: 14px; }
               .description { margin: 10px 0; line-height: 1.5; }
               .no-vulns { text-align: center; padding: 40px; color: #27ae60; }
+              .metric { display: inline-block; margin: 10px 20px; text-align: center; }
+              .metric-value { font-size: 24px; font-weight: bold; color: #2c3e50; }
+              .metric-label { color: #7f8c8d; font-size: 14px; }
+              .json-section { background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0; font-family: monospace; font-size: 12px; }
             </style>
           </head>
           <body>
             <div class="header">
               <h1>Snyk Security Scan Report</h1>
-              <p><strong>Generated:</strong> $(date '+%Y-%m-%d %H:%M:%S UTC')</p>
+              <p><strong>Generated:</strong> $(date -u '+%Y-%m-%d %H:%M:%S UTC')</p>
               <p><strong>Project:</strong> Automated DevSecOps Pipeline</p>
               <p><strong>Scan Type:</strong> Software Composition Analysis (SCA)</p>
             </div>
-            
-            <div class="summary">
-              <h2>Executive Summary</h2>
-              <p>This report summarizes security vulnerabilities found in third-party dependencies.</p>
-              <p><strong>Status:</strong> ${{ needs.sca-scan.result == 'success' && 'PASSED' || 'FAILED' }}</p>
-              <p><strong>Recommendation:</strong> Review all findings and update dependencies as needed.</p>
-            </div>
           EOF
           
-          # Add vulnerabilities if results file exists
-          if [ -f "snyk-results.json" ] && command -v jq >/dev/null 2>&1; then
-            echo '<div class="vulnerabilities">' >> snyk-security-report.html
-            echo '<h2>Vulnerability Details</h2>' >> snyk-security-report.html
+          # Add detailed JSON analysis if results file exists
+          if [ -f "snyk-results.json" ]; then
+            echo '<div class="summary">' >> snyk-security-report.html
+            echo '<h2>Scan Summary</h2>' >> snyk-security-report.html
             
-            jq -r '.vulnerabilities[]? | 
-              "<div class=\"severity-\(.severity|tostring|ascii_downcase) vulnerability\">
-                <h3>\(.title // "Unknown Vulnerability")</h3>
-                <p><strong>Severity:</strong> <span class=\"severity-\(.severity|tostring|ascii_downcase)\">\(.severity // "Unknown")</span></p>
-                <p><strong>Package:</strong> \(.packageName // .package // "Unknown")@\(.version // "Unknown")</p>
-                <p><strong>CVE:</strong> \(.identifiers.CVE[0] // "N/A")</p>
-                <p><strong>CVSS Score:</strong> \(.cvssScore // "N/A")</p>
-                <div class=\"description\"><strong>Description:</strong> \(.description // "No description available")</div>
-                <p class=\"meta\"><strong>Fixed in:</strong> \(.fixedIn // "No fix available")</p>
-              </div>"' snyk-results.json 2>/dev/null >> snyk-security-report.html || echo '<div class="no-vulns"><p>No vulnerabilities found or unable to parse results</p></div>' >> snyk-security-report.html
+            # Extract key metrics from JSON
+            if command -v jq >/dev/null 2>&1; then
+              DEPS=$(jq -r '.dependencyCount // "N/A"' snyk-results.json 2>/dev/null || echo "N/A")
+              VULNS=$(jq -r '.uniqueCount // "0"' snyk-results.json 2>/dev/null || echo "0")
+              STATUS=$(jq -r '.ok // "false"' snyk-results.json 2>/dev/null || echo "false")
+              SUMMARY=$(jq -r '.summary // "No summary available"' snyk-results.json 2>/dev/null || echo "No summary")
+              
+              echo '<div class="metric"><div class="metric-value">'$DEPS'</div><div class="metric-label">Dependencies</div></div>' >> snyk-security-report.html
+              echo '<div class="metric"><div class="metric-value">'$VULNS'</div><div class="metric-label">Vulnerabilities</div></div>' >> snyk-security-report.html
+              echo '<div class="metric"><div class="metric-value">'$STATUS'</div><div class="metric-label">Overall Status</div></div>' >> snyk-security-report.html
+              echo '<p><strong>Summary:</strong> '$SUMMARY'</p>' >> snyk-security-report.html
+            fi
             
             echo '</div>' >> snyk-security-report.html
+            
+            # Add vulnerabilities details
+            if command -v jq >/dev/null 2>&1; then
+              VULN_COUNT=$(jq '.vulnerabilities | length' snyk-results.json 2>/dev/null || echo "0")
+              if [ "$VULN_COUNT" -gt 0 ]; then
+                echo '<div class="vulnerabilities">' >> snyk-security-report.html
+                echo '<h2>Vulnerability Details</h2>' >> snyk-security-report.html
+                
+                jq -r '.vulnerabilities[]? | 
+                  "<div class=\"severity-\(.severity|tostring|ascii_downcase) vulnerability\">
+                    <h3>\(.title // "Unknown Vulnerability")</h3>
+                    <p><strong>Severity:</strong> <span class=\"severity-\(.severity|tostring|ascii_downcase)\">\(.severity // "Unknown")</span></p>
+                    <p><strong>Package:</strong> \(.packageName // .package // "Unknown")@\(.version // "Unknown")</p>
+                    <p><strong>CVE:</strong> \(.identifiers.CVE[0] // "N/A")</p>
+                    <p><strong>CVSS Score:</strong> \(.cvssScore // "N/A")</p>
+                    <div class=\"description\"><strong>Description:</strong> \(.description // "No description available")</div>
+                    <p class=\"meta\"><strong>Fixed in:</strong> \(.fixedIn // "No fix available")</p>
+                    <p class=\"meta\"><strong>References:</strong> \(.references[0] // "N/A")</p>
+                  </div>"' snyk-results.json 2>/dev/null >> snyk-security-report.html
+                
+                echo '</div>' >> snyk-security-report.html
+              fi
+            fi
+            
+            # Add raw JSON section for complete data
+            echo '<div class="json-section">' >> snyk-security-report.html
+            echo '<h3>Complete Scan Data (JSON)</h3>' >> snyk-security-report.html
+            echo '<pre>' >> snyk-security-report.html
+            cat snyk-results.json | head -100 >> snyk-security-report.html
+            echo '</pre>' >> snyk-security-report.html
+            echo '</div>' >> snyk-security-report.html
+            
           else
-            echo '<div class="no-vulns"><h2>Scan Results</h2><p>Snyk scan completed. View detailed results in your Snyk dashboard.</p></div>' >> snyk-security-report.html
+            echo '<div class="no-vulns"><h2>Scan Results</h2><p>Snyk scan completed. No results file available.</p></div>' >> snyk-security-report.html
           fi
           
           echo '</body></html>' >> snyk-security-report.html
@@ -613,7 +646,7 @@ jobs:
             <div class="header">
               <h1>Automated DevSecOps Pipeline Compliance Report</h1>
               <p><strong>Report ID:</strong> #${{ github.run_number }}</p>
-              <p><strong>Date:</strong> $(date '+%Y-%m-%d %H:%M:%S UTC')</p>
+              <p><strong>Date:</strong> $(date -u '+%Y-%m-%d %H:%M:%S UTC')</p>
               <p><strong>Scope:</strong> Proof-of-concept compliance validation</p>
               <p><strong>Pipeline Runtime:</strong> ~15 minutes</p>
             </div>
