@@ -1,14 +1,14 @@
 /**
  * FinSecure Server Test Suite
  * ===========================
- * 
+ *
  * This test suite validates the core functionality of the FinSecure backend server.
  * Tests cover:
  * - Health check endpoint
  * - Static file serving
  * - OTP email endpoint
  * - Error handling
- * 
+ *
  * Test Framework: Jest with Supertest
  * Environment: Node.js test environment
  */

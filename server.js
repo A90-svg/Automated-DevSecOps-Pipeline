@@ -1,7 +1,7 @@
 /**
  * FinSecure Demo Application - Backend Server
  * =====================================
- * 
+ *
  * This is a Node.js Express server for a demo fintech application.
  * It provides:
  * - Static file serving for the SPA frontend
@@ -9,13 +9,13 @@
  * - OTP email sending via EmailJS integration
  * - Health check endpoint for Docker/pipeline monitoring
  * - Request validation with Joi schemas
- * 
+ *
  * SECURITY NOTES:
  * - Uses Helmet for security headers (CSP, XSS protection, etc.)
  * - Rate limits requests to prevent abuse
  * - Validates all incoming requests
  * - No sensitive data logged in production
- * 
+ *
  * ENVIRONMENT VARIABLES:
  * - PORT: Server port (default: 3000)
  * - NODE_ENV: Environment (development/production/test)
@@ -166,7 +166,7 @@ app.use((req, res, next) => {
 // ============================================
 // HEALTH CHECK ENDPOINT
 // ============================================
-// 
+//
 // This endpoint is used by:
 // - Docker health checks
 // - Kubernetes readiness/liveness probes
@@ -197,7 +197,7 @@ app.get('/', (req, res) => {
 // ============================================
 // EMAILJS CONFIGURATION
 // ============================================
-// 
+//
 // EmailJS is used to send OTP emails without exposing SMTP credentials
 // Configuration is loaded from environment variables for security
 const EMAILJS_CONFIG = {
@@ -235,13 +235,13 @@ const otpSchema = Joi.object({
 /**
  * POST /api/send-otp
  * Sends a 6-digit OTP code to the specified email
- * 
+ *
  * Request body:
  * {
  *   "to": "user@example.com",
  *   "code": "123456"
  * }
- * 
+ *
  * Response:
  * { "success": true, "message": "Verification code sent successfully" }
  */

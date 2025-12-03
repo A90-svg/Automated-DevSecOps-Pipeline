@@ -186,7 +186,9 @@ jobs:
             -Dsonar.qualitygate.wait=false
             -Dsonar.coverage.exclusions=**
             -Dsonar.security.hotspots.reviewed=true
-            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+            -Dsonar.projectKey=A90-svg_Automated-DevSecOps-Pipeline
+            -Dsonar.organization=A90-svg
+            -Dsonar.host.url=https://sonarcloud.io
 
       # Generate SAST summary report
       - name: SAST Summary
@@ -256,75 +258,78 @@ jobs:
             echo "snyk-results.json not found"
           fi
 
-      # Upload Snyk scan results as readable HTML report
-      # Preserves scan results for 30 days for compliance
+      # Generate HTML report from Snyk results
+      # Creates readable HTML report for compliance documentation
       - name: Generate Snyk HTML Report
         if: always()
         run: |
-          # Convert JSON to HTML if file exists
-          if [ -f "snyk-results.json" ]; then
-            cat > snyk-report.html << 'EOF'
-            <!DOCTYPE html>
-            <html>
-            <head>
-              <title>Snyk Security Scan Report</title>
-              <style>
-                body { font-family: Arial, sans-serif; margin: 20px; }
-                .header { background: #2c3e50; color: white; padding: 20px; border-radius: 5px; }
-                .vulnerability { margin: 10px 0; padding: 10px; border-left: 4px solid #e74c3c; background: #fdf2f2; }
-                .severity-high { border-left-color: #e74c3c; }
-                .severity-medium { border-left-color: #f39c12; }
-                .severity-low { border-left-color: #27ae60; }
-              </style>
-            </head>
-            <body>
-              <div class="header">
-                <h1>Snyk Security Scan Report</h1>
-                <p>Generated: $(date)</p>
-                <p>Project: Automated DevSecOps Pipeline</p>
-              </div>
-            EOF
+          cat > snyk-security-report.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>Snyk Security Scan Report</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+              .header { background: #2c3e50; color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+              .summary { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+              .vulnerability { margin: 15px 0; padding: 15px; border-left: 4px solid #e74c3c; background: white; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+              .severity-high { border-left-color: #e74c3c; }
+              .severity-medium { border-left-color: #f39c12; }
+              .severity-low { border-left-color: #27ae60; }
+              .severity-info { border-left-color: #3498db; }
+              h1 { margin: 0; }
+              h3 { margin: 0 0 10px 0; color: #2c3e50; }
+              p { margin: 5px 0; }
+              .meta { color: #7f8c8d; font-size: 14px; }
+              .description { margin: 10px 0; line-height: 1.5; }
+              .no-vulns { text-align: center; padding: 40px; color: #27ae60; }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <h1>Snyk Security Scan Report</h1>
+              <p><strong>Generated:</strong> $(date '+%Y-%m-%d %H:%M:%S UTC')</p>
+              <p><strong>Project:</strong> Automated DevSecOps Pipeline</p>
+              <p><strong>Scan Type:</strong> Software Composition Analysis (SCA)</p>
+            </div>
             
-            # Parse JSON and add vulnerabilities
-            if command -v jq >/dev/null 2>&1 && [ -s "snyk-results.json" ]; then
-              echo '<div class="vulnerabilities">' >> snyk-report.html
-              jq -r '.vulnerabilities[]? | "<div class=\"severity-\(.severity|tostring|ascii_downcase)\"><h3>\(.title // "Unknown")</h3><p><strong>Severity:</strong> \(.severity // "Unknown")</p><p><strong>Package:</strong> \(.package // "Unknown")</p><p><strong>Description:</strong> \(.description // "No description")</p></div>"' snyk-results.json >> snyk-report.html 2>/dev/null || echo "<p>No vulnerabilities found or unable to parse results</p>" >> snyk-report.html
-              echo '</div>' >> snyk-report.html
-            else
-              echo "<p>Snyk scan completed. View detailed results in Snyk dashboard.</p>" >> snyk-report.html
-            fi
+            <div class="summary">
+              <h2>Executive Summary</h2>
+              <p>This report summarizes security vulnerabilities found in third-party dependencies.</p>
+              <p><strong>Status:</strong> ${{ needs.sca-scan.result == 'success' && 'PASSED' || 'FAILED' }}</p>
+              <p><strong>Recommendation:</strong> Review all findings and update dependencies as needed.</p>
+            </div>
+          EOF
+          
+          # Add vulnerabilities if results file exists
+          if [ -f "snyk-results.json" ] && command -v jq >/dev/null 2>&1; then
+            echo '<div class="vulnerabilities">' >> snyk-security-report.html
+            echo '<h2>Vulnerability Details</h2>' >> snyk-security-report.html
             
-            echo '</body></html>' >> snyk-report.html
+            jq -r '.vulnerabilities[]? | 
+              "<div class=\"severity-\(.severity|tostring|ascii_downcase) vulnerability\">
+                <h3>\(.title // "Unknown Vulnerability")</h3>
+                <p><strong>Severity:</strong> <span class=\"severity-\(.severity|tostring|ascii_downcase)\">\(.severity // "Unknown")</span></p>
+                <p><strong>Package:</strong> \(.packageName // .package // "Unknown")@\(.version // "Unknown")</p>
+                <p><strong>CVE:</strong> \(.identifiers.CVE[0] // "N/A")</p>
+                <p><strong>CVSS Score:</strong> \(.cvssScore // "N/A")</p>
+                <div class=\"description\"><strong>Description:</strong> \(.description // "No description available")</div>
+                <p class=\"meta\"><strong>Fixed in:</strong> \(.fixedIn // "No fix available")</p>
+              </div>"' snyk-results.json 2>/dev/null >> snyk-security-report.html || echo '<div class="no-vulns"><p>No vulnerabilities found or unable to parse results</p></div>' >> snyk-security-report.html
+            
+            echo '</div>' >> snyk-security-report.html
           else
-            # Create placeholder if no results
-            cat > snyk-report.html << 'EOF'
-            <!DOCTYPE html>
-            <html>
-            <head>
-              <title>Snyk Security Scan Report</title>
-              <style>
-                body { font-family: Arial, sans-serif; margin: 20px; }
-                .header { background: #2c3e50; color: white; padding: 20px; border-radius: 5px; }
-              </style>
-            </head>
-            <body>
-              <div class="header">
-                <h1>Snyk Security Scan Report</h1>
-                <p>Generated: $(date)</p>
-                <p>Project: Automated DevSecOps Pipeline</p>
-              </div>
-              <p>Snyk scan completed successfully. View detailed results in your Snyk dashboard.</p>
-            </body>
-            </html>
-            EOF
+            echo '<div class="no-vulns"><h2>Scan Results</h2><p>Snyk scan completed. View detailed results in your Snyk dashboard.</p></div>' >> snyk-security-report.html
           fi
+          
+          echo '</body></html>' >> snyk-security-report.html
 
-      - name: Upload Snyk Report
+      - name: Upload Snyk HTML Report
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: snyk-security-report
-          path: snyk-report.html
+          path: snyk-security-report.html
           retention-days: 30
           if-no-files-found: warn
 
@@ -577,62 +582,165 @@ jobs:
     if: always()
 
     steps:
-      # Generate comprehensive compliance report
+      # Generate comprehensive compliance HTML report
       # Includes pipeline info, security results, and compliance status
-      - name: Generate Compliance Report
+      - name: Generate Compliance HTML Report
         run: |
-          cat > compliance-report-${{ github.run_number }}.md << 'EOF'
-          # Automated DevSecOps Pipeline Compliance Report
-          
-          ## Executive Summary
-          - **Report ID**: #${{ github.run_number }}
-          - **Date**: $(date '+%Y-%m-%d %H:%M:%S UTC')
-          - **Scope**: Proof-of-concept compliance validation
-          - **Pipeline Runtime**: ~15 minutes
-          
-          ## Compliance Assessment
-          
-          ### PDPL (Bahrain Personal Data Protection Law)
-          | Requirement | Status | Evidence |
-          |-------------|--------|----------|
-          | Data Protection | ✅ COMPLIANT | Synthetic data only, no PII |
-          | Secure Storage | ✅ COMPLIANT | GitHub Secrets encryption |
-          | Audit Trail | ✅ COMPLIANT | Pipeline execution logs |
-          | Data Minimization | ✅ COMPLIANT | Essential demo data only |
-          
-          ### CBB Cybersecurity Framework
-          | Requirement | Status | Evidence |
-          |-------------|--------|----------|
-          | Security Testing | ✅ COMPLIANT | SAST/SCA/DAST automated |
-          | Access Control | ✅ COMPLIANT | Branch protection enabled |
-          | Vulnerability Mgmt | ${{ needs.sca-scan.result == 'success' && '✅ COMPLIANT' || '⚠️ REVIEW' }} | Snyk scanning results |
-          | Continuous Monitoring | ✅ COMPLIANT | Automated pipeline triggers |
-          
-          ## Security Scan Results
-          | Scan Type | Tool | Result | Findings |
-          |-----------|------|--------|----------|
-          | SAST | SonarCloud | ${{ needs.sast-scan.result == 'success' && 'PASS' || 'REVIEW' }} | View SonarCloud dashboard |
-          | SCA | Snyk | ${{ needs.sca-scan.result == 'success' && 'PASS' || 'FAIL' }} | High/Critical CVE blocking |
-          | DAST | OWASP ZAP | ${{ needs.dast-scan.result == 'success' && 'PASS' || 'WARNINGS' }} | HTML report artifact |
-          
-          ## Compliance Status
-          - **Overall Compliance**: ${{ needs.security-gate.result == 'success' && '✅ COMPLIANT' || '⚠️ ACTION REQUIRED' }}
-          - **Security Gate**: ${{ needs.security-gate.result == 'success' && 'PASSED' || 'FAILED' }}
-          - **Merge Status**: ${{ needs.security-gate.result == 'success' && 'ALLOWED' || 'BLOCKED' }}
-          
-          ---
-          *Generated automatically by Automated DevSecOps Pipeline*
-          *Framework Compliance: PDPL & CBB Cybersecurity Framework*
+          cat > compliance-report-${{ github.run_number }}.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>Automated DevSecOps Pipeline Compliance Report</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+              .header { background: #2c3e50; color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+              .section { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+              .compliance-table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+              .compliance-table th, .compliance-table td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+              .compliance-table th { background: #ecf0f1; font-weight: bold; }
+              .status-compliant { color: #27ae60; font-weight: bold; }
+              .status-warning { color: #f39c12; font-weight: bold; }
+              .status-failed { color: #e74c3c; font-weight: bold; }
+              h1 { margin: 0; }
+              h2 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+              .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+              .metric { text-align: center; padding: 15px; background: #ecf0f1; border-radius: 8px; }
+              .metric-value { font-size: 24px; font-weight: bold; color: #2c3e50; }
+              .metric-label { color: #7f8c8d; margin-top: 5px; }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <h1>Automated DevSecOps Pipeline Compliance Report</h1>
+              <p><strong>Report ID:</strong> #${{ github.run_number }}</p>
+              <p><strong>Date:</strong> $(date '+%Y-%m-%d %H:%M:%S UTC')</p>
+              <p><strong>Scope:</strong> Proof-of-concept compliance validation</p>
+              <p><strong>Pipeline Runtime:</strong> ~15 minutes</p>
+            </div>
+            
+            <div class="section">
+              <h2>Executive Summary</h2>
+              <div class="summary-grid">
+                <div class="metric">
+                  <div class="metric-value">3</div>
+                  <div class="metric-label">Security Tools</div>
+                </div>
+                <div class="metric">
+                  <div class="metric-value">30</div>
+                  <div class="metric-label">Days Retention</div>
+                </div>
+                <div class="metric">
+                  <div class="metric-value status-${{ needs.security-gate.result == 'success' && 'compliant' || 'warning' }}">${{ needs.security-gate.result == 'success' && 'COMPLIANT' || 'WARNING' }}</div>
+                  <div class="metric-label">Overall Status</div>
+                </div>
+                <div class="metric">
+                  <div class="metric-value">OWASP Top 10</div>
+                  <div class="metric-label">Coverage</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="section">
+              <h2>Compliance Assessment</h2>
+              
+              <h3>PDPL (Bahrain Personal Data Protection Law)</h3>
+              <table class="compliance-table">
+                <tr><th>Requirement</th><th>Status</th><th>Evidence</th></tr>
+                <tr>
+                  <td>Data Protection</td>
+                  <td class="status-compliant">✅ COMPLIANT</td>
+                  <td>Synthetic data only, no PII</td>
+                </tr>
+                <tr>
+                  <td>Secure Storage</td>
+                  <td class="status-compliant">✅ COMPLIANT</td>
+                  <td>GitHub Secrets encryption</td>
+                </tr>
+                <tr>
+                  <td>Audit Trail</td>
+                  <td class="status-compliant">✅ COMPLIANT</td>
+                  <td>Pipeline execution logs</td>
+                </tr>
+                <tr>
+                  <td>Data Minimization</td>
+                  <td class="status-compliant">✅ COMPLIANT</td>
+                  <td>Essential demo data only</td>
+                </tr>
+              </table>
+              
+              <h3>CBB Cybersecurity Framework</h3>
+              <table class="compliance-table">
+                <tr><th>Requirement</th><th>Status</th><th>Evidence</th></tr>
+                <tr>
+                  <td>Security Testing</td>
+                  <td class="status-compliant">✅ COMPLIANT</td>
+                  <td>SAST/SCA/DAST automated</td>
+                </tr>
+                <tr>
+                  <td>Access Control</td>
+                  <td class="status-compliant">✅ COMPLIANT</td>
+                  <td>Branch protection enabled</td>
+                </tr>
+                <tr>
+                  <td>Vulnerability Management</td>
+                  <td class="status-${{ needs.sca-scan.result == 'success' && 'compliant' || 'warning' }}">${{ needs.sca-scan.result == 'success' && '✅ COMPLIANT' || '⚠️ REVIEW' }}</td>
+                  <td>Snyk scanning results</td>
+                </tr>
+                <tr>
+                  <td>Continuous Monitoring</td>
+                  <td class="status-compliant">✅ COMPLIANT</td>
+                  <td>Automated pipeline triggers</td>
+                </tr>
+              </table>
+            </div>
+            
+            <div class="section">
+              <h2>Security Scan Results</h2>
+              <table class="compliance-table">
+                <tr><th>Scan Type</th><th>Tool</th><th>Result</th><th>Findings</th></tr>
+                <tr>
+                  <td>SAST</td>
+                  <td>SonarCloud</td>
+                  <td class="status-${{ needs.sast-scan.result == 'success' && 'compliant' || 'warning' }}">${{ needs.sast-scan.result == 'success' && 'PASS' || 'REVIEW' }}</td>
+                  <td>View SonarCloud dashboard</td>
+                </tr>
+                <tr>
+                  <td>SCA</td>
+                  <td>Snyk</td>
+                  <td class="status-${{ needs.sca-scan.result == 'success' && 'compliant' || 'failed' }}">${{ needs.sca-scan.result == 'success' && 'PASS' || 'FAIL' }}</td>
+                  <td>High/Critical CVE blocking</td>
+                </tr>
+                <tr>
+                  <td>DAST</td>
+                  <td>OWASP ZAP</td>
+                  <td class="status-${{ needs.dast-scan.result == 'success' && 'compliant' || 'warning' }}">${{ needs.dast-scan.result == 'success' && 'PASS' || 'WARNINGS' }}</td>
+                  <td>HTML report artifact</td>
+                </tr>
+              </table>
+            </div>
+            
+            <div class="section">
+              <h2>Compliance Status</h2>
+              <p><strong>Overall Compliance:</strong> <span class="status-${{ needs.security-gate.result == 'success' && 'compliant' || 'warning' }}">${{ needs.security-gate.result == 'success' && '✅ COMPLIANT' || '⚠️ ACTION REQUIRED' }}</span></p>
+              <p><strong>Security Gate:</strong> <span class="status-${{ needs.security-gate.result == 'success' && 'compliant' || 'failed' }}">${{ needs.security-gate.result == 'success' && 'PASSED' || 'FAILED' }}</span></p>
+              <p><strong>Merge Status:</strong> <span class="status-${{ needs.security-gate.result == 'success' && 'compliant' || 'failed' }}">${{ needs.security-gate.result == 'success' && 'ALLOWED' || 'BLOCKED' }}</span></p>
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px; color: #7f8c8d;">
+              <p><em>Generated automatically by Automated DevSecOps Pipeline</em></p>
+              <p><em>Framework Compliance: PDPL & CBB Cybersecurity Framework</em></p>
+            </div>
+          </body>
+          </html>
           EOF
           
-          # Upload compliance report as artifact
-          echo "Compliance report generated: compliance-report-${{ github.run_number }}.md"
+          echo "Compliance HTML report generated: compliance-report-${{ github.run_number }}.html"
 
-      - name: Upload Compliance Report
+      - name: Upload Compliance HTML Report
         uses: actions/upload-artifact@v4
         with:
           name: compliance-report-${{ github.run_number }}
-          path: compliance-report-${{ github.run_number }}.md
+          path: compliance-report-${{ github.run_number }}.html
           retention-days: 30
 
       # Generate GitHub Actions summary

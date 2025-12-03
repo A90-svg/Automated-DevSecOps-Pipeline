@@ -51,7 +51,7 @@ const STORAGE_SESSION_KEY = 'finsecure_session_v1'; // Session storage key
  * Generate a secure random reference string
  * Uses crypto.getRandomValues() for true randomness
  * Format: PREFIX + 6-character random string (e.g., "TX-A1B2C3")
- * 
+ *
  * @param {string} prefix - Prefix for the reference (e.g., "TX-", "CC-")
  * @returns {string} Secure random reference
  */
@@ -61,13 +61,12 @@ function generateSecureRef(prefix) {
   return prefix + array[0].toString(36).slice(2, 8).toUpperCase();
 }
 
-// =====================================
 // DEFAULT DATABASE STRUCTURE
 // =====================================
-// 
+//
 // This defines the initial state when no data exists in localStorage.
 // Developers can modify this to customize the demo experience.
-// 
+//
 // IMPORTANT: This is demo data only. In production, all data
 // would come from a secure backend API.
 
@@ -86,7 +85,8 @@ const DEFAULT_DB = {
           : 'FinSecure123!', // Default password (demo only)
       mfaEnabled: true, // MFA/2FA enabled flag
       balance: 1842.75, // Account balance in BHD
-      transactions: [ // Transaction history array
+      transactions: [
+        // Transaction history array
         {
           title: 'City Market',
           note: 'Groceries',
@@ -484,7 +484,7 @@ const DEFAULT_DB = {
 // =====================================
 // STATE MANAGEMENT
 // =====================================
-// 
+//
 // This section manages the application state.
 // - `db` holds the mutable runtime state
 // - All state changes go through specific functions
@@ -497,7 +497,7 @@ let db = JSON.parse(JSON.stringify(DEFAULT_DB)); // Deep clone for safe mutation
 /**
  * Get current user data with fallback
  * Ensures we always have a valid user object
- * 
+ *
  * @returns {Object} Current user data
  */
 function getCurrentUser() {
@@ -518,7 +518,7 @@ function getCurrentUser() {
 // =====================================
 // SESSION MANAGEMENT
 // =====================================
-// 
+//
 // Session object tracks the current login state.
 // In production, this would be handled by secure HTTP-only cookies.
 // For demo purposes, we use localStorage (NOT secure for production).
@@ -531,7 +531,7 @@ const session = {
 // =====================================
 // PERSISTENCE HELPERS
 // =====================================
-// 
+//
 // These functions handle saving/loading data from localStorage.
 // - saveDB/loadDB: Manage the application database
 // - saveSession/loadSession: Manage login session
@@ -557,9 +557,9 @@ function loadDB() {
   try {
     const raw = localStorage.getItem(STORAGE_DB_KEY);
     if (!raw) return; // No saved data
-    
+
     const parsed = JSON.parse(raw);
-    
+
     // Deep merge to preserve all user accounts
     if (parsed.users) {
       if (!db.users) db.users = {};
@@ -567,7 +567,7 @@ function loadDB() {
         db.users[email] = parsed.users[email];
       });
     }
-    
+
     // Merge other properties (currentUser, pendingReset, etc.)
     Object.keys(parsed).forEach((k) => {
       if (k !== 'users') {
@@ -694,7 +694,7 @@ let otpRemaining = 0;
 // =====================================
 // SECURITY HELPERS
 // =====================================
-// 
+//
 // These functions clear sensitive input fields to improve security.
 // They prevent sensitive data from lingering in the DOM.
 
@@ -749,7 +749,7 @@ function updateBrandNavVisibility() {
 // =====================================
 // OTP UI & LIFECYCLE MANAGEMENT
 // =====================================
-// 
+//
 // This section handles the OTP (One-Time Password) functionality:
 // - Creates 6-digit input fields with proper navigation
 // - Generates secure OTP codes using crypto API
@@ -763,7 +763,7 @@ function updateBrandNavVisibility() {
  */
 function buildOTPInputs() {
   otpGrid.innerHTML = '';
-  
+
   // Create 6 input fields for 6-digit code
   for (let i = 0; i < 6; i++) {
     const inp = document.createElement('input');
@@ -841,10 +841,10 @@ function sendOTP() {
 /**
  * Send OTP code via backend API
  * Generates a secure 6-digit code and sends it to user's email
- * 
+ *
  * Uses crypto.getRandomValues() for secure random number generation
  * Stores code in db.pendingOTP for verification
- * 
+ *
  * @returns {Promise<void}
  */
 async function sendOtpEmail(targetEmail, code) {
@@ -861,7 +861,7 @@ async function sendOtpEmail(targetEmail, code) {
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       const errorMsg = err.error || `Failed to send email (${res.status})`;
-      
+
       // Show error message to user
       otpHint.textContent = errorMsg;
       otpMessage.textContent = errorMsg;
@@ -897,7 +897,7 @@ function cancelOtpTimer() {
 // =====================================
 // UI RENDER HELPERS
 // =====================================
-// 
+//
 // These functions update the UI based on current state.
 // They are called after state changes to keep the UI in sync.
 
@@ -924,14 +924,14 @@ function renderBalance() {
 /**
  * Render transaction history
  * Displays a list of transactions with optional filtering
- * 
+ *
  * @param {string} filter - Optional search filter for transactions
  */
 function renderTransactions(filter = '') {
   txList.innerHTML = '';
   const user = getCurrentUser();
   const transactions = user.transactions || [];
-  
+
   // Filter transactions based on search query
   const data = transactions.filter((tx) => {
     const key = `${tx.title} ${tx.note} ${tx.ref}`.toLowerCase();
@@ -951,12 +951,12 @@ function renderTransactions(filter = '') {
     // Create transaction metadata container
     const meta = document.createElement('div');
     meta.className = 'tx-meta';
-    
+
     // Transaction title
     const t = document.createElement('div');
     t.className = 'tx-title';
     t.textContent = tx.title;
-    
+
     // Transaction subtitle with note, date, and reference
     const s = document.createElement('div');
     s.className = 'tx-sub';
@@ -1411,7 +1411,7 @@ document.getElementById('qa-transfer').addEventListener('click', () => {
 
 document.getElementById('qa-pay-bills').addEventListener('click', () => {
   const user = getCurrentUser();
-  const amount = 12.50;
+  const amount = 12.5;
   if ((user.balance || 0) >= amount) {
     user.balance = (user.balance || 0) - amount;
     if (!user.transactions) user.transactions = [];
