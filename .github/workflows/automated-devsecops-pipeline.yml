@@ -185,12 +185,9 @@ jobs:
           args: >
             -Dsonar.qualitygate.wait=false
             -Dsonar.coverage.exclusions=**
-            -Dsonar.security.hotspots.reviewed=true
             -Dsonar.projectKey=A90-svg_Automated-DevSecOps-Pipeline
             -Dsonar.organization=A90-svg
             -Dsonar.host.url=https://sonarcloud.io
-            -Dsonar.newCodeDefinition=use_previous_tag_as_baseline
-            -Dsonar.newCodePeriod=3d
 
       # Generate SAST summary report
       - name: SAST Summary
@@ -294,33 +291,36 @@ jobs:
           <body>
             <div class="header">
               <h1>Snyk Security Scan Report</h1>
-              <p><strong>Generated:</strong> $(date -u '+%Y-%m-%d %H:%M:%S UTC')</p>
+              <p><strong>Generated:</strong> '$(date -u '+%Y-%m-%d %H:%M:%S UTC')'</p>
               <p><strong>Project:</strong> Automated DevSecOps Pipeline</p>
               <p><strong>Scan Type:</strong> Software Composition Analysis (SCA)</p>
             </div>
           EOF
           
-          # Add detailed JSON analysis if results file exists
+          # Add detailed scan metrics from JSON
           if [ -f "snyk-results.json" ]; then
             echo '<div class="summary">' >> snyk-security-report.html
             echo '<h2>Scan Summary</h2>' >> snyk-security-report.html
             
-            # Extract key metrics from JSON
             if command -v jq >/dev/null 2>&1; then
               DEPS=$(jq -r '.dependencyCount // "N/A"' snyk-results.json 2>/dev/null || echo "N/A")
               VULNS=$(jq -r '.uniqueCount // "0"' snyk-results.json 2>/dev/null || echo "0")
               STATUS=$(jq -r '.ok // "false"' snyk-results.json 2>/dev/null || echo "false")
               SUMMARY=$(jq -r '.summary // "No summary available"' snyk-results.json 2>/dev/null || echo "No summary")
+              ORG=$(jq -r '.org // "Unknown"' snyk-results.json 2>/dev/null || echo "Unknown")
+              PROJECT=$(jq -r '.projectName // "Unknown"' snyk-results.json 2>/dev/null || echo "Unknown")
               
               echo '<div class="metric"><div class="metric-value">'$DEPS'</div><div class="metric-label">Dependencies</div></div>' >> snyk-security-report.html
               echo '<div class="metric"><div class="metric-value">'$VULNS'</div><div class="metric-label">Vulnerabilities</div></div>' >> snyk-security-report.html
               echo '<div class="metric"><div class="metric-value">'$STATUS'</div><div class="metric-label">Overall Status</div></div>' >> snyk-security-report.html
+              echo '<div class="metric"><div class="metric-value">'$ORG'</div><div class="metric-label">Organization</div></div>' >> snyk-security-report.html
+              echo '<p><strong>Project:</strong> '$PROJECT'</p>' >> snyk-security-report.html
               echo '<p><strong>Summary:</strong> '$SUMMARY'</p>' >> snyk-security-report.html
             fi
             
             echo '</div>' >> snyk-security-report.html
             
-            # Add vulnerabilities details
+            # Add vulnerabilities details in readable format
             if command -v jq >/dev/null 2>&1; then
               VULN_COUNT=$(jq '.vulnerabilities | length' snyk-results.json 2>/dev/null || echo "0")
               if [ "$VULN_COUNT" -gt 0 ]; then
@@ -340,16 +340,21 @@ jobs:
                   </div>"' snyk-results.json 2>/dev/null >> snyk-security-report.html
                 
                 echo '</div>' >> snyk-security-report.html
+              else
+                echo '<div class="no-vulns"><h2>Great News!</h2><p>No vulnerabilities found in your dependencies.</p></div>' >> snyk-security-report.html
               fi
             fi
             
-            # Add raw JSON section for complete data
-            echo '<div class="json-section">' >> snyk-security-report.html
-            echo '<h3>Complete Scan Data (JSON)</h3>' >> snyk-security-report.html
-            echo '<pre>' >> snyk-security-report.html
-            cat snyk-results.json | head -100 >> snyk-security-report.html
-            echo '</pre>' >> snyk-security-report.html
-            echo '</div>' >> snyk-security-report.html
+            # Add license policy information
+            if command -v jq >/dev/null 2>&1; then
+              LICENSE_COUNT=$(jq '.licensesPolicy.orgLicenseRules | length' snyk-results.json 2>/dev/null || echo "0")
+              if [ "$LICENSE_COUNT" -gt 0 ]; then
+                echo '<div class="summary">' >> snyk-security-report.html
+                echo '<h2>License Policy</h2>' >> snyk-security-report.html
+                echo '<p><strong>Configured License Rules:</strong> '$LICENSE_COUNT' license policies</p>' >> snyk-security-report.html
+                echo '</div>' >> snyk-security-report.html
+              fi
+            fi
             
           else
             echo '<div class="no-vulns"><h2>Scan Results</h2><p>Snyk scan completed. No results file available.</p></div>' >> snyk-security-report.html
@@ -497,6 +502,7 @@ jobs:
         run: |
           GATE_STATUS="PASSED"
           HIGH_SEVERITY_FOUND="false"
+          SAST_ISSUES="false"
             
           echo "## Security Gate Evaluation" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -504,6 +510,7 @@ jobs:
           # Check SAST job status (informational)
           if [ "${{ needs.sast-scan.result }}" == "failure" ]; then
             echo "SAST (SonarCloud): FAILED - Review static analysis results in SonarCloud" >> $GITHUB_STEP_SUMMARY
+            SAST_ISSUES="true"
           elif [ "${{ needs.sast-scan.result }}" == "skipped" ]; then
             echo "SAST (SonarCloud): SKIPPED" >> $GITHUB_STEP_SUMMARY
           else
@@ -513,30 +520,36 @@ jobs:
           # Check SCA for high severity vulnerabilities (CVSS ≥ 7.0)
           if [ "${{ needs.sca-scan.result }}" == "failure" ]; then
             echo "SCA (Snyk): FAILED - High severity vulnerabilities detected (CVSS ≥ 7.0)" >> $GITHUB_STEP_SUMMARY
-            GATE_STATUS="FAILED"
             HIGH_SEVERITY_FOUND="true"
           elif [ "${{ needs.sca-scan.result }}" == "skipped" ]; then
             echo "SCA (Snyk): SKIPPED" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "SCA (Snyk): PASSED" >> $GITHUB_STEP_SUMMARY
           fi
-
-          # Check DAST job status (informational)
-          if [ "${{ needs.dast-scan.result }}" == "failure" ]; then
-            echo "DAST (OWASP ZAP): WARNINGS - Review ZAP report for findings" >> $GITHUB_STEP_SUMMARY
-          elif [ "${{ needs.dast-scan.result }}" == "skipped" ]; then
-            echo "DAST (OWASP ZAP): SKIPPED" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "DAST (OWASP ZAP): PASSED" >> $GITHUB_STEP_SUMMARY
-          fi
-            
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Security Gate Status: $GATE_STATUS" >> $GITHUB_STEP_SUMMARY
-
+          
+          # Set gate status based on results
           if [ "$HIGH_SEVERITY_FOUND" == "true" ]; then
-            echo " MERGE BLOCKED: High severity vulnerabilities detected in dependencies (CVSS ≥ 7.0)" >> $GITHUB_STEP_SUMMARY
-            echo "Action Required: Fix all high severity findings before merging" >> $GITHUB_STEP_SUMMARY
+            GATE_STATUS="FAILED"
+          elif [ "$SAST_ISSUES" == "true" ]; then
+            GATE_STATUS="WARNING"
+          else
+            GATE_STATUS="PASSED"
           fi
+          
+          echo "Security Gate Status: $GATE_STATUS" >> $GITHUB_STEP_SUMMARY
+          echo "SAST Issues: $SAST_ISSUES" >> $GITHUB_STEP_SUMMARY
+          echo "High Severity Vulnerabilities: $HIGH_SEVERITY_FOUND" >> $GITHUB_STEP_SUMMARY
+
+      # Report security gate status
+      # Provides clear summary of security findings
+      - name: Security Gate Report
+        run: |
+          echo "## Security Gate Summary" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status | Action Required |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|----------------|" >> $GITHUB_STEP_SUMMARY
+          echo "| SAST (SonarCloud) | ${{ needs.sast-scan.result == 'success' && '✅ PASSED' || '⚠️ REVIEW' }} | Review in SonarCloud dashboard |" >> $GITHUB_STEP_SUMMARY
+          echo "| SCA (Snyk) | ${{ needs.sca-scan.result == 'success' && '✅ PASSED' || '⚠️ REVIEW' }} | Update dependencies if needed |" >> $GITHUB_STEP_SUMMARY
+          echo "| DAST (OWASP ZAP) | ${{ needs.dast-scan.result == 'success' && '✅ PASSED' || '⚠️ REVIEW' }} | Review HTML report |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Note**: For production deployment, all security issues should be resolved." >> $GITHUB_STEP_SUMMARY
 
       - name: Block Merge on High Severity
         if: needs.sca-scan.result == 'failure'
@@ -646,7 +659,7 @@ jobs:
             <div class="header">
               <h1>Automated DevSecOps Pipeline Compliance Report</h1>
               <p><strong>Report ID:</strong> #${{ github.run_number }}</p>
-              <p><strong>Date:</strong> $(date -u '+%Y-%m-%d %H:%M:%S UTC')</p>
+              <p><strong>Date:</strong> '$(date -u '+%Y-%m-%d %H:%M:%S UTC')'</p>
               <p><strong>Scope:</strong> Proof-of-concept compliance validation</p>
               <p><strong>Pipeline Runtime:</strong> ~15 minutes</p>
             </div>

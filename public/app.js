@@ -78,10 +78,15 @@ const DEFAULT_DB = {
       last: 'Blue', // Last name
       email: 'finsecureapp@gmail.com', // Email (also the key)
       phone: '33344455', // Phone number
-      password:
-        typeof import.meta.env !== 'undefined' && import.meta.env.VITE_DEFAULT_PASSWORD
+      password: (() => {
+        // Check for environment variable first
+        const envPassword = typeof import.meta.env !== 'undefined' && import.meta.env.VITE_DEFAULT_PASSWORD
           ? import.meta.env.VITE_DEFAULT_PASSWORD
-          : 'FinSecure123!', // Default password (demo only)
+          : null;
+        
+        // Return environment password or default demo password
+        return envPassword || 'FinSecure123!';
+      })(), // Default password (demo only)
       mfaEnabled: true, // MFA/2FA enabled flag
       balance: 1842.75, // Account balance in BHD
       transactions: [
