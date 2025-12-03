@@ -26,7 +26,7 @@
 /* eslint-env browser */ // Enable browser globals (localStorage, document, etc.)
 
 // STORAGE & PERSISTENCE LAYER
-// ===================================
+// =====================================
 //
 // This section handles data persistence using localStorage.
 // In production, this would be replaced with API calls to a backend.

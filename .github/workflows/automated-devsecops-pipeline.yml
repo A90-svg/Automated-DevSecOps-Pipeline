@@ -505,25 +505,19 @@ jobs:
         with:
           target: 'http://localhost:3000'
           rules_file_name: '.zap/rules.tsv'
-          cmd_options: '-a -j -t report_html.html'
+          cmd_options: '-a -j'
           allow_issue_writing: false
-          # Let ZAP generate reports but don't upload artifacts automatically
 
-      # Check if ZAP report was generated
-      # Debug step to ensure report file exists
-      - name: Check ZAP Report File
+      # Upload ZAP scan report as artifact
+      # Preserves DAST results for 30 days for compliance
+      - name: Upload ZAP Report
+        uses: actions/upload-artifact@v4
         if: always()
-        run: |
-          echo "Checking for ZAP report files..."
-          ls -la *.html *.json *.xml 2>/dev/null || echo "No ZAP report files found"
-          if [ -f "report_html.html" ]; then
-            echo "ZAP HTML report found: report_html.html"
-            ls -la report_html.html
-          else
-            echo "ZAP HTML report not found, checking for other report files..."
-            find . -name "*.html" -o -name "*.json" -o -name "*.xml" | head -10
-          fi
-          echo "ZAP scan completed. Check GitHub Actions artifacts for the report."
+        with:
+          name: zap-scan-results
+          path: report_html.html
+          retention-days: 30
+          if-no-files-found: warn
 
       # Clean up Docker container
       # Ensures proper cleanup regardless of scan outcome
