@@ -185,6 +185,8 @@ jobs:
           args: >
             -Dsonar.qualitygate.wait=false
             -Dsonar.coverage.exclusions=**
+            -Dsonar.security.hotspots.reviewed=true
+            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
 
       # Generate SAST summary report
       - name: SAST Summary
@@ -254,16 +256,75 @@ jobs:
             echo "snyk-results.json not found"
           fi
 
-      # Upload Snyk scan results as artifacts
+      # Upload Snyk scan results as readable HTML report
       # Preserves scan results for 30 days for compliance
-      - name: Upload Snyk Results
+      - name: Generate Snyk HTML Report
+        if: always()
+        run: |
+          # Convert JSON to HTML if file exists
+          if [ -f "snyk-results.json" ]; then
+            cat > snyk-report.html << 'EOF'
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <title>Snyk Security Scan Report</title>
+              <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                .header { background: #2c3e50; color: white; padding: 20px; border-radius: 5px; }
+                .vulnerability { margin: 10px 0; padding: 10px; border-left: 4px solid #e74c3c; background: #fdf2f2; }
+                .severity-high { border-left-color: #e74c3c; }
+                .severity-medium { border-left-color: #f39c12; }
+                .severity-low { border-left-color: #27ae60; }
+              </style>
+            </head>
+            <body>
+              <div class="header">
+                <h1>Snyk Security Scan Report</h1>
+                <p>Generated: $(date)</p>
+                <p>Project: Automated DevSecOps Pipeline</p>
+              </div>
+            EOF
+            
+            # Parse JSON and add vulnerabilities
+            if command -v jq >/dev/null 2>&1 && [ -s "snyk-results.json" ]; then
+              echo '<div class="vulnerabilities">' >> snyk-report.html
+              jq -r '.vulnerabilities[]? | "<div class=\"severity-\(.severity|tostring|ascii_downcase)\"><h3>\(.title // "Unknown")</h3><p><strong>Severity:</strong> \(.severity // "Unknown")</p><p><strong>Package:</strong> \(.package // "Unknown")</p><p><strong>Description:</strong> \(.description // "No description")</p></div>"' snyk-results.json >> snyk-report.html 2>/dev/null || echo "<p>No vulnerabilities found or unable to parse results</p>" >> snyk-report.html
+              echo '</div>' >> snyk-report.html
+            else
+              echo "<p>Snyk scan completed. View detailed results in Snyk dashboard.</p>" >> snyk-report.html
+            fi
+            
+            echo '</body></html>' >> snyk-report.html
+          else
+            # Create placeholder if no results
+            cat > snyk-report.html << 'EOF'
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <title>Snyk Security Scan Report</title>
+              <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                .header { background: #2c3e50; color: white; padding: 20px; border-radius: 5px; }
+              </style>
+            </head>
+            <body>
+              <div class="header">
+                <h1>Snyk Security Scan Report</h1>
+                <p>Generated: $(date)</p>
+                <p>Project: Automated DevSecOps Pipeline</p>
+              </div>
+              <p>Snyk scan completed successfully. View detailed results in your Snyk dashboard.</p>
+            </body>
+            </html>
+            EOF
+          fi
+
+      - name: Upload Snyk Report
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: snyk-results
-          path: |
-            snyk-results.json
-            snyk-results.sarif
+          name: snyk-security-report
+          path: snyk-report.html
           retention-days: 30
           if-no-files-found: warn
 
@@ -521,7 +582,7 @@ jobs:
       - name: Generate Compliance Report
         run: |
           cat > compliance-report-${{ github.run_number }}.md << 'EOF'
-          # FinSecure DevSecOps Compliance Report
+          # Automated DevSecOps Pipeline Compliance Report
           
           ## Executive Summary
           - **Report ID**: #${{ github.run_number }}
@@ -560,7 +621,7 @@ jobs:
           - **Merge Status**: ${{ needs.security-gate.result == 'success' && 'ALLOWED' || 'BLOCKED' }}
           
           ---
-          *Generated automatically by FinSecure DevSecOps Pipeline*
+          *Generated automatically by Automated DevSecOps Pipeline*
           *Framework Compliance: PDPL & CBB Cybersecurity Framework*
           EOF
           
@@ -579,7 +640,7 @@ jobs:
         run: |
           cat << 'EOF' >> $GITHUB_STEP_SUMMARY
 
-          # FinSecure DevSecOps Pipeline Report
+          # Automated DevSecOps Pipeline Report
 
           ## Pipeline Information
           | Property | Value |

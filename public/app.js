@@ -1,7 +1,7 @@
 /**
  * FinSecure Demo Application - Frontend SPA
  * =====================================
- * 
+ *
  * This is a Single Page Application (SPA) for a demo fintech application.
  * It provides:
  * - Client-side routing without page refreshes
@@ -9,13 +9,13 @@
  * - Authentication flow (login, signup, MFA)
  * - Dashboard with balance and transactions
  * - OTP email verification via backend API
- * 
+ *
  * SECURITY NOTES:
  * - Uses localStorage for demo persistence (NOT for production)
  * - Passwords are hashed in localStorage (demo only)
  * - All API calls go through our secure backend
  * - MFA is required for login (simulated via email OTP)
- * 
+ *
  * ARCHITECTURE:
  * - Component-based rendering with renderers
  * - Event delegation for efficient DOM updates
@@ -25,13 +25,12 @@
 
 /* eslint-env browser */ // Enable browser globals (localStorage, document, etc.)
 
-// =====================================
 // STORAGE & PERSISTENCE LAYER
 // =====================================
-// 
+//
 // This section handles data persistence using localStorage.
 // In production, this would be replaced with API calls to a backend.
-// 
+//
 // - STORAGE_DB_KEY: Stores user data, transactions, etc.
 // - STORAGE_SESSION_KEY: Stores current login session
 // - All mutations call saveDB() to persist changes
