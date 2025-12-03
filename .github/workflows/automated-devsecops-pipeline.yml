@@ -78,7 +78,7 @@ jobs:
       # Checkout repository with full history
       # Full history needed for SonarCloud analysis
       - name: Checkout Repository
-        uses: actions/checkout@v4@8ade135a41bc3ea155f9e95d5c4299a939ac13bb
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ secrets.GIT_TOKEN }}
@@ -169,7 +169,7 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4@8ade135a41bc3ea155f9e95d5c4299a939ac13bb
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -188,7 +188,6 @@ jobs:
             -Dsonar.projectKey=A90-svg_Automated-DevSecOps-Pipeline
             -Dsonar.organization=A90-svg
             -Dsonar.host.url=https://sonarcloud.io
-            -Dsonar.scanner.forceZeroExitCode=true
 
       # Generate SAST summary report
       - name: SAST Summary
@@ -213,7 +212,7 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4@8ade135a41bc3ea155f9e95d5c4299a939ac13bb
+        uses: actions/checkout@v4
 
       - name: Download Dependencies
         uses: actions/download-artifact@v4
@@ -263,7 +262,8 @@ jobs:
       - name: Generate Snyk HTML Report
         if: always()
         run: |
-          cat > snyk-security-report.html << 'EOF'
+          REPORT_DATE=$(date -u '+%Y-%m-%d %H:%M:%S UTC')
+          cat > snyk-security-report.html << EOF
           <!DOCTYPE html>
           <html>
           <head>
@@ -292,7 +292,7 @@ jobs:
           <body>
             <div class="header">
               <h1>Snyk Security Scan Report</h1>
-              <p><strong>Generated:</strong> $(date -u '+%Y-%m-%d %H:%M:%S UTC')</p>
+              <p><strong>Generated:</strong> $REPORT_DATE</p>
               <p><strong>Project:</strong> Automated DevSecOps Pipeline</p>
               <p><strong>Scan Type:</strong> Software Composition Analysis (SCA)</p>
             </div>
@@ -396,7 +396,7 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4@8ade135a41bc3ea155f9e95d5c4299a939ac13bb
+        uses: actions/checkout@v4
 
       # Download pre-built Docker image from build job
       # Reuses image to save time and ensure consistency
@@ -591,7 +591,7 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4@8ade135a41bc3ea155f9e95d5c4299a939ac13bb
+        uses: actions/checkout@v4
 
       # Build and run application with Docker Compose
       # Demonstrates production-ready deployment configuration
@@ -638,7 +638,8 @@ jobs:
       # Includes pipeline info, security results, and compliance status
       - name: Generate Compliance HTML Report
         run: |
-          cat > compliance-report-${{ github.run_number }}.html << 'EOF'
+          REPORT_DATE=$(date -u '+%Y-%m-%d %H:%M:%S UTC')
+          cat > compliance-report-${{ github.run_number }}.html << EOF
           <!DOCTYPE html>
           <html>
           <head>
@@ -665,7 +666,7 @@ jobs:
             <div class="header">
               <h1>Automated DevSecOps Pipeline Compliance Report</h1>
               <p><strong>Report ID:</strong> #${{ github.run_number }}</p>
-              <p><strong>Date:</strong> $(date -u '+%Y-%m-%d %H:%M:%S UTC')</p>
+              <p><strong>Date:</strong> $REPORT_DATE</p>
               <p><strong>Scope:</strong> Proof-of-concept compliance validation</p>
               <p><strong>Pipeline Runtime:</strong> ~15 minutes</p>
             </div>

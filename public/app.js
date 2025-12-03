@@ -43,9 +43,9 @@ const STORAGE_SESSION_KEY = 'finsecure_session_v1'; // Session storage key
 // EmailJS configuration is handled securely via environment variables
 // No sensitive keys are exposed in the frontend code
 
-// =====================================
+// ====================================
 // UTILITY FUNCTIONS
-// =====================================
+// ====================================
 
 /**
  * Generate a secure random reference string
