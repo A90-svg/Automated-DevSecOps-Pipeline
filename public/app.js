@@ -63,7 +63,6 @@ function generateSecureRef(prefix) {
 
 // DEFAULT DATABASE STRUCTURE
 // =====================================
-//
 // This defines the initial state when no data exists in localStorage.
 // Developers can modify this to customize the demo experience.
 //
