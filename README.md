@@ -2,9 +2,9 @@
 
 Automated DevSecOps pipeline for a demo fintech application, demonstrating SAST, SCA, and DAST integration with GitHub Actions. **Scope: Proof-of-concept pipeline supporting PDPL and CBB Cybersecurity Framework compliance.**
 
-## Project Overview
+## 🎯 Project Overview
 
-This project implements a comprehensive DevSecOps pipeline for the demo fintech app called FinSecure, demonstrating secure software development practices including:
+This project implements a comprehensive DevSecOps pipeline for the demo fintech app called **FinSecure**, demonstrating secure software development practices including:
 
 - **SAST** (Static Application Security Testing) with SonarCloud
 - **SCA** (Software Composition Analysis) with Snyk
@@ -14,9 +14,20 @@ This project implements a comprehensive DevSecOps pipeline for the demo fintech 
 - **Security Gates** with merge blocking for high-severity vulnerabilities
 - **Automated Reporting** with severity levels and compliance metrics
 
-## Scope
+### 📋 Application Features
 
-**In-Scope:**
+The FinSecure demo application includes:
+- **Authentication**: Login, signup, and password reset
+- **MFA/OTP**: Two-factor authentication via email verification
+- **Dashboard**: Account balance and transaction history
+- **SPA Architecture**: Single-page application with client-side routing
+- **Responsive Design**: Mobile-friendly UI with modern styling
+- **Security Headers**: Helmet.js for XSS, clickjacking protection
+- **Rate Limiting**: Express-rate-limit for DoS protection
+
+## 🎯 Scope
+
+**✅ In-Scope:**
 
 - Automated DevSecOps pipeline using GitHub Actions
 - Free/open-source security tools (SonarCloud, Snyk, OWASP ZAP)
@@ -25,14 +36,14 @@ This project implements a comprehensive DevSecOps pipeline for the demo fintech 
 - GitHub Secrets for credential management
 - Compliance reporting (PDPL, CBB Framework)
 
-**Out-of-Scope:**
+**❌ Out-of-Scope:**
 
 - Production-grade fintech system
 - Real financial transactions
 - Paid enterprise tools
 - Multi-language support
 
-## Prerequisites
+## 📋 Prerequisites
 
 - Node.js **22.20.0** or higher
 - npm 10.x or higher
@@ -40,8 +51,9 @@ This project implements a comprehensive DevSecOps pipeline for the demo fintech 
 - GitHub repository with Actions enabled
 - SonarCloud account (free tier)
 - Snyk account (free tier)
+- EmailJS account (optional, for OTP demo)
 
-## Installation
+## 🚀 Installation
 
 1. Clone the repository:
 
@@ -62,7 +74,7 @@ This project implements a comprehensive DevSecOps pipeline for the demo fintech 
    # Edit .env with your configuration
    ```
 
-## GitHub Secrets Setup
+## 🔐 GitHub Secrets Setup
 
 Required secrets for pipeline functionality:
 
@@ -76,9 +88,10 @@ EMAILJS_SERVICE_ID=your_emailjs_service_id (optional)
 EMAILJS_TEMPLATE_ID=your_emailjs_template_id (optional)
 EMAILJS_PUBLIC_KEY=your_emailjs_public_key (optional)
 EMAILJS_PRIVATE_KEY=your_emailjs_private_key (optional)
+GIT_TOKEN=your_github_personal_access_token (for deployment)
 ```
 
-## Configuration
+## ⚙️ Configuration
 
 Configure the following environment variables in your `.env` file:
 
@@ -91,10 +104,11 @@ NODE_ENV=development
 EMAILJS_SERVICE_ID=your_service_id
 EMAILJS_TEMPLATE_ID=your_template_id
 EMAILJS_PUBLIC_KEY=your_public_key
+EMAILJS_PRIVATE_KEY=your_private_key
+EMAILJS_FROM_EMAIL=finsecureapp@gmail.com
 
 # Security
-# SESSION_SECRET=your_session_secret_here
-# JWT_SECRET=your_jwt_secret_here
+ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001
 ```
 
 ## Running the Application
@@ -402,4 +416,93 @@ This project is for educational and demonstration purposes only. No part of this
 
 ---
 
-**Project Status:** ✅ Ready for testing | **Last Updated:** 2025-11-28
+**Project Status:** ✅ Ready for testing | **Last Updated:** 2025-12-02
+
+## 📚 Code Documentation
+
+The codebase has been thoroughly documented with comprehensive comments:
+
+### Backend (`server.js`)
+- **Security Middleware**: Helmet for XSS/clickjacking protection, CORS configuration
+- **Rate Limiting**: Express-rate-limit to prevent DoS attacks
+- **Request Validation**: Joi schema validation for all inputs
+- **Error Handling**: Centralized error handling with development stack traces
+- **Health Endpoint**: For Docker/Kubernetes health checks
+- **OTP Service**: EmailJS integration for two-factor authentication
+- **Graceful Shutdown**: Proper handling of SIGTERM and uncaught exceptions
+
+### Frontend (`public/app.js`)
+- **SPA Architecture**: Client-side routing with hash-based navigation
+- **State Management**: Centralized state with localStorage persistence
+- **Authentication**: Login, signup, password reset with MFA support
+- **Security**: Input clearing, secure random generation, XSS prevention
+- **UI Components**: Card rendering, transaction history, search functionality
+- **OTP Flow**: 6-digit input fields with automatic navigation and resend timer
+
+### Configuration Files
+- **Dockerfile**: Multi-stage build with non-root user and health checks
+- **docker-compose.yml**: Production-ready configuration with restart policies
+- **GitHub Actions**: Complete DevSecOps pipeline with SAST/SCA/DAST
+- **Tests**: Jest test suite with comprehensive endpoint coverage
+
+## 🛡️ Security Implementation
+
+This project demonstrates multiple security best practices:
+
+### Application Security
+- **Content Security Policy**: Restricts resource loading to prevent XSS
+- **Rate Limiting**: 1000 requests per 15 minutes per IP
+- **Input Validation**: All user inputs validated with Joi schemas
+- **Password Security**: Demo uses plain text (production would use bcrypt)
+- **Session Management**: localStorage-based (demo only)
+
+### Infrastructure Security
+- **Non-root Containers**: Docker containers run as nodejs user (UID 1001)
+- **Minimal Base Images**: Alpine Linux reduces attack surface
+- **Health Checks**: Container health monitoring
+- **Secrets Management**: GitHub Secrets with automatic masking
+
+### DevSecOps Pipeline
+- **SAST**: SonarCloud for static code analysis
+- **SCA**: Snyk for dependency vulnerability scanning
+- **DAST**: OWASP ZAP for dynamic security testing
+- **Security Gates**: Blocks merges on high-severity vulnerabilities
+
+## 📊 Compliance Metrics
+
+The pipeline generates compliance reports for:
+- **PDPL** (Bahrain Personal Data Protection Law)
+- **CBB Cybersecurity Framework**
+- **OWASP Top 10** coverage
+- **Vulnerability severity levels**
+
+## 🚀 Quick Start
+
+1. **Clone and Install**:
+   ```bash
+   git clone https://github.com/A90-svg/Automated-DevSecOps-Pipeline.git
+   cd Automated-DevSecOps-Pipeline
+   npm ci
+   ```
+
+2. **Configure Environment**:
+   ```bash
+   cp .env.example .env
+   # Edit .env with your settings
+   ```
+
+3. **Run Development**:
+   ```bash
+   npm run dev
+   ```
+
+4. **Access Application**:
+   - URL: http://localhost:3000
+   - Default User: finsecureapp@gmail.com
+   - Default Password: FinSecure123!
+
+---
+
+**© 2025 A90-svg - All Rights Reserved**
+
+This project is for educational and demonstration purposes only.

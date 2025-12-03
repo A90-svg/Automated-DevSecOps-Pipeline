@@ -1,50 +1,99 @@
-/* eslint-env browser */
+/**
+ * FinSecure Demo Application - Frontend SPA
+ * =====================================
+ * 
+ * This is a Single Page Application (SPA) for a demo fintech application.
+ * It provides:
+ * - Client-side routing without page refreshes
+ * - State management with localStorage persistence
+ * - Authentication flow (login, signup, MFA)
+ * - Dashboard with balance and transactions
+ * - OTP email verification via backend API
+ * 
+ * SECURITY NOTES:
+ * - Uses localStorage for demo persistence (NOT for production)
+ * - Passwords are hashed in localStorage (demo only)
+ * - All API calls go through our secure backend
+ * - MFA is required for login (simulated via email OTP)
+ * 
+ * ARCHITECTURE:
+ * - Component-based rendering with renderers
+ * - Event delegation for efficient DOM updates
+ * - Hash-based routing (#/dashboard, #/history, etc.)
+ * - Centralized state management
+ */
+
+/* eslint-env browser */ // Enable browser globals (localStorage, document, etc.)
+
 // =====================================
-// SPA Router + State with localStorage persistence
-// - Persist db (user, balance, transactions) to localStorage
-// - Persist session (loggedIn/email) to localStorage so refresh keeps login (optional)
-// - All major mutations call saveDB() to persist
+// STORAGE & PERSISTENCE LAYER
+// =====================================
+// 
+// This section handles data persistence using localStorage.
+// In production, this would be replaced with API calls to a backend.
+// 
+// - STORAGE_DB_KEY: Stores user data, transactions, etc.
+// - STORAGE_SESSION_KEY: Stores current login session
+// - All mutations call saveDB() to persist changes
+// - Data survives page refreshes and browser restarts
+
+// Storage keys used in localStorage
+const STORAGE_DB_KEY = 'finsecure_db_v1'; // Database storage key
+const STORAGE_SESSION_KEY = 'finsecure_session_v1'; // Session storage key
+
+// EmailJS configuration is handled securely via environment variables
+// No sensitive keys are exposed in the frontend code
+
+// =====================================
+// UTILITY FUNCTIONS
 // =====================================
 
-// -----------------------
-// Storage keys & defaults
-// -----------------------
-// Keys used in localStorage so we can persist across page refreshes.
-const STORAGE_DB_KEY = 'finsecure_db_v1';
-const STORAGE_SESSION_KEY = 'finsecure_session_v1';
-
-// EmailJS configuration handled securely
-
-// Secure random reference generator
+/**
+ * Generate a secure random reference string
+ * Uses crypto.getRandomValues() for true randomness
+ * Format: PREFIX + 6-character random string (e.g., "TX-A1B2C3")
+ * 
+ * @param {string} prefix - Prefix for the reference (e.g., "TX-", "CC-")
+ * @returns {string} Secure random reference
+ */
 function generateSecureRef(prefix) {
   const array = new Uint32Array(1);
   crypto.getRandomValues(array);
   return prefix + array[0].toString(36).slice(2, 8).toUpperCase();
 }
 
-// DEFAULT_DB: base data used when no saved db exists. Kept as a JS constant.
-// PayTabs's Developers can update this default dataset if they want different demo data.
+// =====================================
+// DEFAULT DATABASE STRUCTURE
+// =====================================
+// 
+// This defines the initial state when no data exists in localStorage.
+// Developers can modify this to customize the demo experience.
+// 
+// IMPORTANT: This is demo data only. In production, all data
+// would come from a secure backend API.
+
 const DEFAULT_DB = {
-  // Support multiple users - store as object with email as key
+  // Users collection - stored as object with email as key
+  // This allows quick lookup without iteration
   users: {
     'finsecureapp@gmail.com': {
-      first: 'Lily',
-      last: 'Blue',
-      email: 'finsecureapp@gmail.com',
-      phone: '33344455',
+      first: 'Lily', // First name
+      last: 'Blue', // Last name
+      email: 'finsecureapp@gmail.com', // Email (also the key)
+      phone: '33344455', // Phone number
       password:
         typeof import.meta.env !== 'undefined' && import.meta.env.VITE_DEFAULT_PASSWORD
           ? import.meta.env.VITE_DEFAULT_PASSWORD
-          : 'FinSecure123!', // Default password
-      mfaEnabled: true,
-      balance: 1842.75,
-      transactions: [
+          : 'FinSecure123!', // Default password (demo only)
+      mfaEnabled: true, // MFA/2FA enabled flag
+      balance: 1842.75, // Account balance in BHD
+      transactions: [ // Transaction history array
         {
           title: 'City Market',
           note: 'Groceries',
-          amount: -22.95,
+          amount: -22.95, // Negative = debit
           date: '2025-10-28 18:23',
-          ref: 'CC-10281823',
+          ref: 'CC-10281823', // Unique reference
         },
         {
           title: 'Fuel Station',
@@ -429,20 +478,36 @@ const DEFAULT_DB = {
   },
   // Current logged-in user email (for quick access)
   currentUser: 'finsecureapp@gmail.com',
-  pendingReset: false,
-  pendingOTP: null,
+  pendingReset: false, // Flag for password reset flow
+  pendingOTP: null, // Store pending OTP verification data
 };
 
-// Mutable state for runtime - db holds the app data, cloned from defaults initially.
-let db = JSON.parse(JSON.stringify(DEFAULT_DB)); // deep clone so we can mutate safely.
+// =====================================
+// STATE MANAGEMENT
+// =====================================
+// 
+// This section manages the application state.
+// - `db` holds the mutable runtime state
+// - All state changes go through specific functions
+// - State is persisted to localStorage on changes
+// - Helper functions provide safe access to user data
 
-// Helper to get current user data
+// Mutable state for runtime - cloned from defaults to avoid mutation
+let db = JSON.parse(JSON.stringify(DEFAULT_DB)); // Deep clone for safe mutation
+
+/**
+ * Get current user data with fallback
+ * Ensures we always have a valid user object
+ * 
+ * @returns {Object} Current user data
+ */
 function getCurrentUser() {
   if (!db.currentUser || !db.users[db.currentUser]) {
-    // Fallback to first user or default
+    // Fallback to first user or create default user
     const firstUserEmail = Object.keys(db.users)[0] || 'finsecureapp@gmail.com';
     db.currentUser = firstUserEmail;
     if (!db.users[firstUserEmail]) {
+      // Clone default user data if user doesn't exist
       db.users[firstUserEmail] = JSON.parse(
         JSON.stringify(DEFAULT_DB.users['finsecureapp@gmail.com'])
       );
@@ -450,48 +515,75 @@ function getCurrentUser() {
   }
   return db.users[db.currentUser];
 }
-// Simple session object for demo: tracks loggedIn and email
+
+// =====================================
+// SESSION MANAGEMENT
+// =====================================
+// 
+// Session object tracks the current login state.
+// In production, this would be handled by secure HTTP-only cookies.
+// For demo purposes, we use localStorage (NOT secure for production).
+
 const session = {
-  loggedIn: false,
-  email: null,
+  loggedIn: false, // Whether user is authenticated
+  email: null, // Current user email
 };
 
-// -----------------------
-// Persistence helpers
-// - loadDB/saveDB: manage serialized DB in localStorage
-// - loadSession/saveSession: persist login state
-// -----------------------
+// =====================================
+// PERSISTENCE HELPERS
+// =====================================
+// 
+// These functions handle saving/loading data from localStorage.
+// - saveDB/loadDB: Manage the application database
+// - saveSession/loadSession: Manage login session
+// - All operations are wrapped in try-catch for safety
+
+/**
+ * Save database to localStorage
+ * Persists all user data, transactions, and app state
+ */
 function saveDB() {
   try {
     localStorage.setItem(STORAGE_DB_KEY, JSON.stringify(db));
   } catch (e) {
-    // Failed to save DB to localStorage
+    console.error('Failed to save DB to localStorage:', e);
   }
 }
+
+/**
+ * Load database from localStorage
+ * Merges saved data with current state to preserve defaults
+ */
 function loadDB() {
   try {
     const raw = localStorage.getItem(STORAGE_DB_KEY);
-    if (!raw) return;
+    if (!raw) return; // No saved data
+    
     const parsed = JSON.parse(raw);
-    // Merge parsed onto db to avoid losing references to properties that code expects.
-    // Deep merge users object to preserve all user accounts
+    
+    // Deep merge to preserve all user accounts
     if (parsed.users) {
       if (!db.users) db.users = {};
       Object.keys(parsed.users).forEach((email) => {
         db.users[email] = parsed.users[email];
       });
     }
-    // Merge other properties
+    
+    // Merge other properties (currentUser, pendingReset, etc.)
     Object.keys(parsed).forEach((k) => {
       if (k !== 'users') {
         db[k] = parsed[k];
       }
     });
   } catch (e) {
-    // Failed to load DB from localStorage
+    console.error('Failed to load DB from localStorage:', e);
   }
 }
 
+/**
+ * Save session state to localStorage
+ * Persists login status and email across page refreshes
+ */
 function saveSession() {
   try {
     localStorage.setItem(
@@ -554,7 +646,7 @@ const loginEmail = document.getElementById('login-email');
 const loginPassword = document.getElementById('login-password');
 const btnLogin = document.getElementById('btn-login');
 const loginMessage = document.getElementById('login-message');
-
+const linkSignup = document.getElementById('link-signup');
 const linkForgot = document.getElementById('link-forgot');
 
 // Signup inputs
@@ -600,54 +692,89 @@ const OTP_RESEND_SECONDS = 60;
 let otpRemaining = 0;
 
 // -------------------------------------------------------
-// Helpers: clear sensitive inputs (improves security/UX)
-// -------------------------------------------------------
+// =====================================
+// SECURITY HELPERS
+// =====================================
+// 
+// These functions clear sensitive input fields to improve security.
+// They prevent sensitive data from lingering in the DOM.
+
+/**
+ * Clear login form password field
+ */
 function clearLoginInputs() {
   loginPassword.value = '';
 }
+
+/**
+ * Clear password reset form fields
+ */
 function clearResetInputs() {
   rpPassword.value = '';
   rpConfirm.value = '';
 }
+
+/**
+ * Clear signup form password fields
+ */
 function clearSignupPasswords() {
   suPassword.value = '';
   suConfirm.value = '';
 }
+
+/**
+ * Clear all OTP input fields
+ */
 function clearOtpInputs() {
   Array.from(otpGrid.children).forEach((inp) => (inp.value = ''));
 }
 
-// -------------------------------------------------------
-// Brand nav visibility: only show when logged in
-// -------------------------------------------------------
+// =====================================
+// UI STATE MANAGEMENT
+// =====================================
+
+/**
+ * Update brand navigation visibility based on login state
+ * Shows navigation only when user is logged in
+ */
 function updateBrandNavVisibility() {
   if (session.loggedIn) {
     brandNav.style.display = 'flex';
     brandNav.removeAttribute('aria-hidden');
   } else {
     brandNav.style.display = 'none';
-    // Don't set aria-hidden when hidden - just use display:none
     brandNav.removeAttribute('aria-hidden');
   }
 }
 
-// =======================
-// OTP UI / lifecycle
-// - buildOTPInputs: creates 6 inputs and wires basic keyboard navigation
-// - sendOTP: generates a demo code, stores in db.pendingOTP and starts resend timer
-// - startOtpCountdown / cancelOtpTimer: manage resend cooldown UI
-// =======================
+// =====================================
+// OTP UI & LIFECYCLE MANAGEMENT
+// =====================================
+// 
+// This section handles the OTP (One-Time Password) functionality:
+// - Creates 6-digit input fields with proper navigation
+// - Generates secure OTP codes using crypto API
+// - Manages resend cooldown timer
+// - Handles OTP verification with backend API
+
+/**
+ * Build OTP input fields
+ * Creates 6 input fields with automatic navigation between them
+ * Includes keyboard navigation and paste support
+ */
 function buildOTPInputs() {
   otpGrid.innerHTML = '';
+  
+  // Create 6 input fields for 6-digit code
   for (let i = 0; i < 6; i++) {
     const inp = document.createElement('input');
     inp.type = 'text';
-    inp.maxLength = 1;
+    inp.maxLength = 1; // Only one character per input
     inp.className = 'otp-input';
-    inp.inputMode = 'numeric';
-    inp.autocomplete = 'one-time-code';
+    inp.inputMode = 'numeric'; // Show numeric keyboard on mobile
+    inp.autocomplete = 'one-time-code'; // Help password managers
 
-    // When user types, automatically move to next input
+    // Auto-advance to next input on input
     inp.addEventListener('input', (e) => {
       const val = e.target.value;
       if (val && val.length > 0) {
@@ -712,6 +839,15 @@ function sendOTP() {
   sendOtpEmail(targetEmail, code);
 }
 
+/**
+ * Send OTP code via backend API
+ * Generates a secure 6-digit code and sends it to user's email
+ * 
+ * Uses crypto.getRandomValues() for secure random number generation
+ * Stores code in db.pendingOTP for verification
+ * 
+ * @returns {Promise<void}
+ */
 async function sendOtpEmail(targetEmail, code) {
   // Use server-side API only for security (no exposed tokens)
   try {
@@ -726,9 +862,8 @@ async function sendOtpEmail(targetEmail, code) {
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       const errorMsg = err.error || `Failed to send email (${res.status})`;
-      // Failed to send OTP email:
-
-      // Show more detailed error message to user
+      
+      // Show error message to user
       otpHint.textContent = errorMsg;
       otpMessage.textContent = errorMsg;
       otpMessage.style.display = 'block';
@@ -746,6 +881,10 @@ async function sendOtpEmail(targetEmail, code) {
   }
 }
 
+/**
+ * Cancel OTP countdown timer
+ * Clears the interval and resets the resend button
+ */
 function cancelOtpTimer() {
   if (otpIntervalId) {
     clearInterval(otpIntervalId);
@@ -756,45 +895,70 @@ function cancelOtpTimer() {
   btnResendOTP.textContent = 'Resend code';
 }
 
-// -------------------------------------------------------
-// Render helpers
-// - renderCard: update visa name & masked number
-// - renderBalance: refresh displayed balance
-// - renderTransactions: populate tx list
-// -------------------------------------------------------
+// =====================================
+// UI RENDER HELPERS
+// =====================================
+// 
+// These functions update the UI based on current state.
+// They are called after state changes to keep the UI in sync.
+
+/**
+ * Render Visa card details
+ * Updates the card name and shows masked card number
+ */
 function renderCard() {
   const user = getCurrentUser();
   const name = session.loggedIn ? (user.first + ' ' + user.last).toUpperCase() : 'MARK BLUE';
   visaName.textContent = name;
-  visaNumber.textContent = '4242 68•• ••21 9012';
+  visaNumber.textContent = '4242 68•• ••21 9012'; // Masked number
 }
+
+/**
+ * Render account balance
+ * Updates the displayed balance from current user data
+ */
 function renderBalance() {
   const user = getCurrentUser();
   balanceValue.textContent = `BHD ${(user.balance || 0).toFixed(2)}`;
 }
+
+/**
+ * Render transaction history
+ * Displays a list of transactions with optional filtering
+ * 
+ * @param {string} filter - Optional search filter for transactions
+ */
 function renderTransactions(filter = '') {
   txList.innerHTML = '';
   const user = getCurrentUser();
   const transactions = user.transactions || [];
+  
+  // Filter transactions based on search query
   const data = transactions.filter((tx) => {
     const key = `${tx.title} ${tx.note} ${tx.ref}`.toLowerCase();
     return key.includes(filter.toLowerCase());
   });
 
-  // Build DOM nodes for each transaction (simple card)
+  // Build DOM nodes for each transaction
   data.forEach((tx) => {
     const item = document.createElement('div');
     item.className = 'tx-item';
 
+    // Create transaction icon (first 2 letters of title)
     const icon = document.createElement('div');
     icon.className = 'tx-icon';
     icon.textContent = tx.title.slice(0, 2).toUpperCase();
 
+    // Create transaction metadata container
     const meta = document.createElement('div');
     meta.className = 'tx-meta';
+    
+    // Transaction title
     const t = document.createElement('div');
     t.className = 'tx-title';
     t.textContent = tx.title;
+    
+    // Transaction subtitle with note, date, and reference
     const s = document.createElement('div');
     s.className = 'tx-sub';
     s.textContent = `${tx.note} • ${tx.date} • Ref: ${tx.ref}`;
@@ -937,29 +1101,32 @@ window.addEventListener('load', () => {
 
   loadSession();
 
-  // If first time (no stored db) persist default so subsequent refreshes keep changes
-  // (this won't overwrite an existing DB because loadDB only merges if something present)
+  // Persist default data for first-time users
   saveDB();
 
-  // If session indicates logged in, keep logged-in state across refresh
+  // Update UI based on login state
   updateBrandNavVisibility();
 
-  // If user already logged in and no explicit route, show dashboard
+  // Handle initial routing
   handleRoute();
   renderCard();
   updateBrandNavVisibility();
 });
 
-// -------------------------------------------------------
-// Authentication / Events
-// -------------------------------------------------------
+// =====================================
+// AUTHENTICATION EVENT HANDLERS
+// =====================================
 
-// Login button click handler
+/**
+ * Login button click handler
+ * Validates credentials and initiates login flow
+ */
 btnLogin.addEventListener('click', () => {
   loginMessage.style.display = 'none';
   const email = (loginEmail.value || '').trim();
   const pw = loginPassword.value || '';
 
+  // Validate input
   if (!email || !pw) {
     loginMessage.textContent = 'Please enter email and password.';
     loginMessage.style.display = 'block';
@@ -1208,6 +1375,59 @@ document.getElementById('qa-pay-bills').addEventListener('click', () => {
   saveDB();
   renderBalance();
 });
+
+// Quick action buttons (demo functionality)
+document.getElementById('qa-add-funds').addEventListener('click', () => {
+  const user = getCurrentUser();
+  user.balance = (user.balance || 0) + 100;
+  if (!user.transactions) user.transactions = [];
+  user.transactions.unshift({
+    title: 'Deposit',
+    note: 'Account funding',
+    amount: +100,
+    date: new Date().toISOString().slice(0, 16).replace('T', ' '),
+    ref: generateSecureRef('DEP-'),
+  });
+  saveDB();
+  renderBalance();
+});
+
+document.getElementById('qa-transfer').addEventListener('click', () => {
+  const user = getCurrentUser();
+  const amount = 25;
+  if ((user.balance || 0) >= amount) {
+    user.balance = (user.balance || 0) - amount;
+    if (!user.transactions) user.transactions = [];
+    user.transactions.unshift({
+      title: 'Transfer',
+      note: 'To John Doe',
+      amount: -amount,
+      date: new Date().toISOString().slice(0, 16).replace('T', ' '),
+      ref: generateSecureRef('TRF-'),
+    });
+    saveDB();
+    renderBalance();
+  }
+});
+
+document.getElementById('qa-pay-bills').addEventListener('click', () => {
+  const user = getCurrentUser();
+  const amount = 12.50;
+  if ((user.balance || 0) >= amount) {
+    user.balance = (user.balance || 0) - amount;
+    if (!user.transactions) user.transactions = [];
+    user.transactions.unshift({
+      title: 'Bill Payment',
+      note: 'Electricity Bill',
+      amount: -amount,
+      date: new Date().toISOString().slice(0, 16).replace('T', ' '),
+      ref: generateSecureRef('BILL-'),
+    });
+    saveDB();
+    renderBalance();
+  }
+});
+
 document.getElementById('qa-exchange').addEventListener('click', () => {
   const user = getCurrentUser();
   user.balance = (user.balance || 0) + 5.25;

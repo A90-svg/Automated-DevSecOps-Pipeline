@@ -1,17 +1,45 @@
+# ============================================
+# FINSECURE APP - DOCKER COMPOSE
+# ============================================
+# Production-ready Docker Compose configuration
+# 
+# Features:
+# - Health checks for monitoring
+# - Automatic restart policy
+# - Port mapping for external access
+# - Environment configuration
+# ============================================
+
 services:
   finsecure-app:
+    # Build from local Dockerfile
     build: .
+    
+    # Container name for easy identification
     container_name: finsecure-app
+    
+    # Map host port 3000 to container port 3000
+    # Allows external access to the application
     ports:
       - '3000:3000'
+    
+    # Environment variables for the application
+    # NODE_ENV=production enables production optimizations
     environment:
       - NODE_ENV=production
       - PORT=3000
+    
+    # Restart policy for high availability
+    # unless-stopped: restart if container stops, unless manually stopped
     restart: unless-stopped
+    
+    # Health check configuration
+    # Monitors application health and reports to Docker
     healthcheck:
-      # Check if the app is responding (better for DevSecOps monitoring)
+      # Use curl to check the /health endpoint
+      # -f: Fail silently on server errors
       test: ['CMD', 'curl', '-f', 'http://localhost:3000/health']
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
+      interval: 30s      # Check every 30 seconds
+      timeout: 10s       # Timeout after 10 seconds
+      retries: 3          # Allow 3 failures before marking unhealthy
+      start_period: 10s   # Wait 10s before first health check

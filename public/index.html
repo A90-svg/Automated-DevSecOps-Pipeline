@@ -6,13 +6,38 @@
     <title>FinSecure</title>
 
     <!--
-       FinSecure prototype (single-file SPA)
-    - This version includes inline comments throughout HTML, CSS and JS.
-    - Comments explain intent, important variables, and flows developers are likely
-      to touch when editing (persistence, routing, authentication, OTP, renderers).
-    - SECURITY NOTE (demo only): localStorage persists data (including demo password).
-      Do NOT store real credentials in localStorage in production.
-  -->
+       ============================================
+       FINSECURE APPLICATION - SINGLE PAGE SPA
+       ============================================
+       
+       ARCHITECTURE:
+       - Single File SPA with HTML, CSS, and JavaScript
+       - Client-side routing using hash-based navigation
+       - LocalStorage for data persistence (demo only)
+       - No backend framework dependency for UI
+       
+       FEATURES:
+       - Multi-factor authentication (OTP via EmailJS)
+       - Transaction history with search
+       - Balance management
+       - Responsive design
+       
+       SECURITY NOTES:
+       - DEMO ONLY: localStorage persists passwords
+       - PRODUCTION: Use secure backend with proper auth
+       - XSS protection through CSP headers
+       - Input validation on client and server
+       
+       SECTIONS:
+       1. CSS Design System (variables, themes, components)
+       2. HTML Structure (pages, forms, navigation)
+       3. JavaScript Application (state, routing, auth)
+       
+       DEVELOPMENT:
+       - Comments explain key flows and variables
+       - Editable sections marked for customization
+       - Mock data for demonstration purposes
+    -->
 
     <style>
       /* ===========================
