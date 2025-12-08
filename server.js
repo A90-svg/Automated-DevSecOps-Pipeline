@@ -322,11 +322,10 @@ app.use(errorHandler);
 // This allows the server to accept connections from outside the container
 const server = httpServer.listen(PORT, '0.0.0.0', () => {
   // Always log startup messages for visibility
-    console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
-    console.log(`Health check: http://localhost:${PORT}/health`);
-    console.log(`App: http://localhost:${PORT}`);
-  }
-);
+  console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+  console.log(`Health check: http://localhost:${PORT}/health`);
+  console.log(`App: http://localhost:${PORT}`);
+});
 
 // ============================================
 // PROCESS HANDLERS - GRACEFUL SHUTDOWN

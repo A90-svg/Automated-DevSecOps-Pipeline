@@ -597,9 +597,9 @@ jobs:
           echo "## Security Gate Summary" >> $GITHUB_STEP_SUMMARY
           echo "| Check | Status | Action Required |" >> $GITHUB_STEP_SUMMARY
           echo "|-------|--------|----------------|" >> $GITHUB_STEP_SUMMARY
-          echo "| SAST (SonarCloud) | ${{ needs.sast-scan.result == 'success' && '✅ PASSED' || '⚠️ REVIEW' }} | Review in SonarCloud dashboard |" >> $GITHUB_STEP_SUMMARY
-          echo "| SCA (Snyk) | ${{ needs.sca-scan.result == 'success' && '✅ PASSED' || '⚠️ REVIEW' }} | Update dependencies if needed |" >> $GITHUB_STEP_SUMMARY
-          echo "| DAST (OWASP ZAP) | ${{ needs.dast-scan.result == 'success' && '✅ PASSED' || '⚠️ REVIEW' }} | Review HTML report |" >> $GITHUB_STEP_SUMMARY
+          echo "| SAST (SonarCloud) | ${{ needs.sast-scan.result == 'success' && 'PASSED' || 'REVIEW' }} | Review in SonarCloud dashboard |" >> $GITHUB_STEP_SUMMARY
+          echo "| SCA (Snyk) | ${{ needs.sca-scan.result == 'success' && 'PASSED' || 'REVIEW' }} | Update dependencies if needed |" >> $GITHUB_STEP_SUMMARY
+          echo "| DAST (OWASP ZAP) | ${{ needs.dast-scan.result == 'success' && 'PASSED' || 'REVIEW' }} | Review HTML report |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Note**: For production deployment, all security issues should be resolved." >> $GITHUB_STEP_SUMMARY
 
@@ -782,7 +782,7 @@ jobs:
                 </tr>
                 <tr>
                   <td>Vulnerability Management</td>
-                  <td class="status-${{ needs.sca-scan.result == 'success' && 'compliant' || 'warning' }}">${{ needs.sca-scan.result == 'success' && '✅ COMPLIANT' || '⚠️ REVIEW' }}</td>
+                  <td class="status-${{ needs.sca-scan.result == 'success' && 'compliant' || 'warning' }}">${{ needs.sca-scan.result == 'success' && 'COMPLIANT' || 'REVIEW' }}</td>
                   <td>Snyk scanning results</td>
                 </tr>
                 <tr>
@@ -820,7 +820,7 @@ jobs:
             
             <div class="section">
               <h2>Compliance Status</h2>
-              <p><strong>Overall Compliance:</strong> <span class="status-${{ needs.security-gate.result == 'success' && 'compliant' || 'warning' }}">${{ needs.security-gate.result == 'success' && '✅ COMPLIANT' || '⚠️ ACTION REQUIRED' }}</span></p>
+              <p><strong>Overall Compliance:</strong> <span class="status-${{ needs.security-gate.result == 'success' && 'compliant' || 'warning' }}">${{ needs.security-gate.result == 'success' && 'COMPLIANT' || 'ACTION REQUIRED' }}</span></p>
               <p><strong>Security Gate:</strong> <span class="status-${{ needs.security-gate.result == 'success' && 'compliant' || 'failed' }}">${{ needs.security-gate.result == 'success' && 'PASSED' || 'FAILED' }}</span></p>
               <p><strong>Merge Status:</strong> <span class="status-${{ needs.security-gate.result == 'success' && 'compliant' || 'failed' }}">${{ needs.security-gate.result == 'success' && 'ALLOWED' || 'BLOCKED' }}</span></p>
             </div>
