@@ -2,7 +2,7 @@
 
 Automated DevSecOps pipeline for a demo fintech application, demonstrating SAST, SCA, and DAST integration with GitHub Actions. **Scope: Proof-of-concept pipeline supporting PDPL and CBB Cybersecurity Framework compliance.**
 
-## 🎯 Project Overview
+## Project Overview
 
 This project implements a comprehensive DevSecOps pipeline for the demo fintech app called **FinSecure**, demonstrating secure software development practices including:
 
@@ -14,7 +14,7 @@ This project implements a comprehensive DevSecOps pipeline for the demo fintech 
 - **Security Gates** with merge blocking for high-severity vulnerabilities
 - **Automated Reporting** with severity levels and compliance metrics
 
-### 📋 Application Features
+### Application Features
 
 The FinSecure demo application includes:
 - **Authentication**: Login, signup, and password reset
@@ -53,7 +53,24 @@ The FinSecure demo application includes:
 - Snyk account (free tier)
 - EmailJS account (optional, for OTP demo)
 
-## 🚀 Installation
+
+## External Service Setup
+
+### SonarCloud Setup (SAST)
+1. Go to [SonarCloud](https://sonarcloud.io/) and sign in with GitHub
+2. Create a new organization (if you don't have one)
+3. Create a new project manually
+4. Generate a token in your account security settings
+5. Copy the token (you won't see it again)
+
+### Snyk Setup (SCA)
+1. Sign up at [Snyk](https://snyk.io/) with GitHub
+2. Go to Account Settings > API Tokens
+3. Generate a new token and copy it
+
+
+
+## Installation
 
 1. Clone the repository:
 
@@ -74,7 +91,7 @@ The FinSecure demo application includes:
    # Edit .env with your configuration
    ```
 
-## 🔐 GitHub Secrets Setup
+## GitHub Secrets Setup
 
 Required secrets for pipeline functionality:
 
@@ -91,7 +108,7 @@ EMAILJS_PRIVATE_KEY=your_emailjs_private_key (optional)
 GIT_TOKEN=your_github_personal_access_token (for deployment)
 ```
 
-## ⚙️ Configuration
+## Configuration
 
 Configure the following environment variables in your `.env` file:
 
@@ -212,17 +229,17 @@ This application includes several security measures:
 
 ### PDPL (Bahrain Personal Data Protection Law)
 
-- ✅ Synthetic data only (no personal information)
-- ✅ Secure credential management via GitHub Secrets
-- ✅ Audit trail maintained in pipeline logs
-- ✅ Data minimization principles applied
+- Synthetic data only (no personal information)
+- Secure credential management via GitHub Secrets
+- Audit trail maintained in pipeline logs
+- Data minimization principles applied
 
 ### CBB Cybersecurity Framework
 
-- ✅ Automated security testing implemented
-- ✅ Access controls via branch protection
-- ✅ Vulnerability management and scanning
-- ✅ Continuous monitoring and reporting
+- Automated security testing implemented
+- Access controls via branch protection
+- Vulnerability management and scanning
+- Continuous monitoring and reporting
 
 ## Pipeline Architecture
 
@@ -281,7 +298,20 @@ This application includes several security measures:
                                │
                                ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                       JOB 6: REPORT GENERATION                              │
+│                        JOB 6: DOCKER COMPOSE DEPLOYMENT                     │
+│        ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐        │
+│        │  Build & Start  │  │  Health Check   │  │  Test Endpoints │        │
+│        │  Containers     │  │  (Docker)       │  │  (Curl Tests)   │        │
+│        └─────────────────┘  └─────────────────┘  └─────────────────┘        │
+│        ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐        │
+│        │  Verify         │  │  Cleanup        │  │  Log Collection │        │
+│        │  Deployment     │  │  (On Complete)  │  │  (If Failed)    │        │
+│        └─────────────────┘  └─────────────────┘  └─────────────────┘        │
+└──────────────────────────────┬──────────────────────────────────────────────┘
+                               │
+                               ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                       JOB 7: REPORT GENERATION                              │
 │     ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐           │
 │     │ Executive       │  │ Compliance      │  │ Artifact        │           │
 │     │ Summary         │  │ Metrics         │  │ Storage         │           │
@@ -347,18 +377,18 @@ The FinSecure demo app includes:
 
 ### Performance Requirements Met
 
-- ✅ **SAST completion**: ≤10 minutes (actual: ~3 minutes)
-- ✅ **DAST completion**: ≤15 minutes (actual: ~8 minutes)
-- ✅ **Docker build**: ≤5 minutes (actual: ~2 minutes)
-- ✅ **Pipeline runtime**: ≤15 minutes (actual: ~13 minutes)
+- **SAST completion**: ≤10 minutes (actual: ~3 minutes)
+- **DAST completion**: ≤15 minutes (actual: ~8 minutes)
+- **Docker build**: ≤5 minutes (actual: ~2 minutes)
+- **Pipeline runtime**: ≤15 minutes (actual: ~13 minutes)
 
 ### Security Requirements Met
 
-- ✅ **Automated scanning**: On every push/PR
-- ✅ **Severity reporting**: High/Medium/Low classification
-- ✅ **Merge blocking**: High-severity vulnerabilities
-- ✅ **Secrets masking**: 100% via GitHub Secrets
-- ✅ **Compliance reporting**: PDPL + CBB Framework metrics
+- **Automated scanning**: On every push/PR
+- **Severity reporting**: High/Medium/Low classification
+- **Merge blocking**: High-severity vulnerabilities
+- **Secrets masking**: 100% via GitHub Secrets
+- **Compliance reporting**: PDPL + CBB Framework metrics
 
 ### Docker Compose (Recommended for Development)
 
@@ -416,9 +446,9 @@ This project is for educational and demonstration purposes only. No part of this
 
 ---
 
-**Project Status:** ✅ Ready for testing | **Last Updated:** 2025-12-02
+**Project Status:** Ready for testing | **Last Updated:** 2025-12-02
 
-## 📚 Code Documentation
+## Code Documentation
 
 The codebase has been thoroughly documented with comprehensive comments:
 
@@ -445,7 +475,7 @@ The codebase has been thoroughly documented with comprehensive comments:
 - **GitHub Actions**: Complete DevSecOps pipeline with SAST/SCA/DAST
 - **Tests**: Jest test suite with comprehensive endpoint coverage
 
-## 🛡️ Security Implementation
+## Security Implementation
 
 This project demonstrates multiple security best practices:
 
@@ -468,7 +498,7 @@ This project demonstrates multiple security best practices:
 - **DAST**: OWASP ZAP for dynamic security testing
 - **Security Gates**: Blocks merges on high-severity vulnerabilities
 
-## 📊 Compliance Metrics
+## Compliance Metrics
 
 The pipeline generates compliance reports for:
 - **PDPL** (Bahrain Personal Data Protection Law)
@@ -476,7 +506,7 @@ The pipeline generates compliance reports for:
 - **OWASP Top 10** coverage
 - **Vulnerability severity levels**
 
-## 🚀 Quick Start
+## Quick Start
 
 1. **Clone and Install**:
    ```bash

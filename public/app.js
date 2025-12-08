@@ -103,21 +103,21 @@ const DEFAULT_DB = {
         {
           title: 'Fuel Station',
           note: 'Petrol top-up',
-          amount: -7.0,
+          amount: -7,
           date: '2025-10-27 09:12',
           ref: 'FS-10270912',
         },
         {
           title: 'Bank Transfer',
           note: 'Transfer to Ali',
-          amount: -50.0,
+          amount: -50,
           date: '2025-10-26 21:05',
           ref: 'BT-10262105',
         },
         {
           title: 'Settlement',
           note: 'Freelance payout',
-          amount: +120.0,
+          amount: +120,
           date: '2025-10-26 15:42',
           ref: 'SET-10261542',
         },
@@ -138,7 +138,7 @@ const DEFAULT_DB = {
         {
           title: 'Mobile Recharge',
           note: 'Top-up',
-          amount: -3.0,
+          amount: -3,
           date: '2025-10-23 20:44',
           ref: 'MR-10232044',
         },
@@ -166,7 +166,7 @@ const DEFAULT_DB = {
         {
           title: 'Bank Transfer',
           note: 'Transfer from Sara',
-          amount: +75.0,
+          amount: +75,
           date: '2025-10-21 10:15',
           ref: 'BT-10211015',
         },
@@ -180,7 +180,7 @@ const DEFAULT_DB = {
         {
           title: 'Telco',
           note: 'Fiber bill',
-          amount: -16.0,
+          amount: -16,
           date: '2025-10-19 09:00',
           ref: 'TEL-10210900',
         },
@@ -194,21 +194,21 @@ const DEFAULT_DB = {
         {
           title: 'Cinema',
           note: 'Tickets',
-          amount: -14.0,
+          amount: -14,
           date: '2025-10-17 20:10',
           ref: 'CIN-10172010',
         },
         {
           title: 'Hotel Booking',
           note: 'Weekend stay',
-          amount: -122.0,
+          amount: -122,
           date: '2025-10-16 14:22',
           ref: 'HTL-10161422',
         },
         {
           title: 'Bank Transfer',
           note: 'Rent',
-          amount: -300.0,
+          amount: -300,
           date: '2025-10-15 12:00',
           ref: 'BT-10151200',
         },
@@ -236,14 +236,14 @@ const DEFAULT_DB = {
         {
           title: 'Government',
           note: 'Fee',
-          amount: -2.0,
+          amount: -2,
           date: '2025-10-12 09:30',
           ref: 'GV-10120930',
         },
         {
           title: 'Settlement',
           note: 'Payout',
-          amount: +80.0,
+          amount: +80,
           date: '2025-10-11 22:14',
           ref: 'SET-10112214',
         },
@@ -257,7 +257,7 @@ const DEFAULT_DB = {
         {
           title: 'Mobile Recharge',
           note: 'Mobile',
-          amount: -5.0,
+          amount: -5,
           date: '2025-10-10 10:22',
           ref: 'MR-10101022',
         },
@@ -299,28 +299,28 @@ const DEFAULT_DB = {
         {
           title: 'Cinema',
           note: 'Tickets',
-          amount: -10.0,
+          amount: -10,
           date: '2025-10-04 20:05',
           ref: 'CIN-10042005',
         },
         {
           title: 'Bank Transfer',
           note: 'Transfer to Ahmed',
-          amount: -40.0,
+          amount: -40,
           date: '2025-10-03 16:12',
           ref: 'BT-10031612',
         },
         {
           title: 'Settlement',
           note: 'Payout',
-          amount: +150.0,
+          amount: +150,
           date: '2025-10-02 14:00',
           ref: 'SET-10021400',
         },
         {
           title: 'Telco',
           note: 'Mobile bill',
-          amount: -11.0,
+          amount: -11,
           date: '2025-10-01 09:15',
           ref: 'TEL-10010915',
         },
@@ -369,14 +369,14 @@ const DEFAULT_DB = {
         {
           title: 'Bank Transfer',
           note: 'Transfer from Fatima',
-          amount: +60.0,
+          amount: +60,
           date: '2025-09-25 09:05',
           ref: 'BT-09250905',
         },
         {
           title: 'Utilities',
           note: 'Electricity',
-          amount: -29.0,
+          amount: -29,
           date: '2025-09-24 07:55',
           ref: 'UT-09240755',
         },
@@ -390,21 +390,21 @@ const DEFAULT_DB = {
         {
           title: 'Mobile Recharge',
           note: 'Mobile',
-          amount: -3.0,
+          amount: -3,
           date: '2025-09-22 21:12',
           ref: 'MR-09222112',
         },
         {
           title: 'Settlement',
           note: 'Freelance',
-          amount: +95.0,
+          amount: +95,
           date: '2025-09-21 16:40',
           ref: 'SET-09211640',
         },
         {
           title: 'Cinema',
           note: 'Tickets',
-          amount: -12.0,
+          amount: -12,
           date: '2025-09-20 20:20',
           ref: 'CIN-09202020',
         },
@@ -425,14 +425,14 @@ const DEFAULT_DB = {
         {
           title: 'Telco',
           note: 'Fiber bill',
-          amount: -16.0,
+          amount: -16,
           date: '2025-09-17 09:00',
           ref: 'TEL-09170900',
         },
         {
           title: 'Local Diner',
           note: 'Dinner',
-          amount: -6.0,
+          amount: -6,
           date: '2025-09-16 19:18',
           ref: 'LD-09161918',
         },
@@ -460,21 +460,21 @@ const DEFAULT_DB = {
         {
           title: 'Refund',
           note: 'Item return',
-          amount: +12.0,
+          amount: +12,
           date: '2025-09-12 11:22',
           ref: 'RF-09121122',
         },
         {
           title: 'Bank Transfer',
           note: 'Rent',
-          amount: -300.0,
+          amount: -300,
           date: '2025-09-11 12:00',
           ref: 'BT-09111200',
         },
         {
           title: 'Settlement',
           note: 'Payout',
-          amount: +130.0,
+          amount: +130,
           date: '2025-09-10 14:00',
           ref: 'SET-09101400',
         },
@@ -1348,18 +1348,18 @@ txSearch.addEventListener('input', () => {
 // Quick actions (mock) — persist changes
 document.getElementById('qa-add-funds').addEventListener('click', () => {
   const user = getCurrentUser();
-  user.balance = (user.balance || 0) + 50.0;
+  user.balance = (user.balance || 0) + 50;
   saveDB();
   renderBalance();
 });
 document.getElementById('qa-transfer').addEventListener('click', () => {
   const user = getCurrentUser();
-  user.balance = (user.balance || 0) - 20.0;
+  user.balance = (user.balance || 0) - 20;
   if (!user.transactions) user.transactions = [];
   user.transactions.unshift({
     title: 'Bank Transfer',
     note: 'Transfer to Friend',
-    amount: -20.0,
+    amount: -20,
     date: new Date().toISOString().slice(0, 16).replace('T', ' '),
     ref: generateSecureRef('BT-'),
   });

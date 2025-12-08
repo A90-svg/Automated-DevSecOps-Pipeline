@@ -321,13 +321,12 @@ app.use(errorHandler);
 // CRITICAL: Bind to 0.0.0.0 for Docker compatibility
 // This allows the server to accept connections from outside the container
 const server = httpServer.listen(PORT, '0.0.0.0', () => {
-  // Only log startup message in development mode
-  if (process.env.NODE_ENV !== 'test' && process.env.NODE_ENV !== 'production') {
+  // Always log startup messages for visibility
     console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
     console.log(`Health check: http://localhost:${PORT}/health`);
     console.log(`App: http://localhost:${PORT}`);
   }
-});
+);
 
 // ============================================
 // PROCESS HANDLERS - GRACEFUL SHUTDOWN
