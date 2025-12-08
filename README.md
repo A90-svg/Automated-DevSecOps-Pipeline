@@ -25,9 +25,9 @@ The FinSecure demo application includes:
 - **Security Headers**: Helmet.js for XSS, clickjacking protection
 - **Rate Limiting**: Express-rate-limit for DoS protection
 
-## 🎯 Scope
+## Scope
 
-**✅ In-Scope:**
+**In-Scope:**
 
 - Automated DevSecOps pipeline using GitHub Actions
 - Free/open-source security tools (SonarCloud, Snyk, OWASP ZAP)
@@ -36,14 +36,14 @@ The FinSecure demo application includes:
 - GitHub Secrets for credential management
 - Compliance reporting (PDPL, CBB Framework)
 
-**❌ Out-of-Scope:**
+**Out-of-Scope:**
 
 - Production-grade fintech system
 - Real financial transactions
 - Paid enterprise tools
 - Multi-language support
 
-## 📋 Prerequisites
+## Prerequisites
 
 - Node.js **22.20.0** or higher
 - npm 10.x or higher

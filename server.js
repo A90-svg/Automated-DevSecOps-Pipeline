@@ -47,9 +47,9 @@ const httpServer = createServer(app);
 // Export app for testing purposes
 export { app };
 
-// ============================================
+// ===========================================
 // SECURITY MIDDLEWARE CONFIGURATION
-// ============================================
+// ===========================================
 
 // Helmet: Set security-related HTTP headers
 // Protects against XSS, clickjacking, MIME sniffing, etc.
@@ -88,9 +88,9 @@ app.use(
   })
 );
 
-// ============================================
+// ===========================================
 // RATE LIMITING & REQUEST PARSING
-// ============================================
+// ===========================================
 
 // Rate limiting: Prevent brute force and DoS attacks
 // Limits each IP to 1000 requests per 15-minute window
