@@ -534,9 +534,9 @@ const session = {
   email: null, // Current user email
 };
 
-// =====================================
+// ====================================
 // PERSISTENCE HELPERS
-// =====================================
+// ====================================
 //
 // These functions handle saving/loading data from localStorage.
 // - saveDB/loadDB: Manage the application database

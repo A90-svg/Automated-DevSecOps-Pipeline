@@ -505,17 +505,19 @@ jobs:
         with:
           target: 'http://localhost:3000'
           rules_file_name: '.zap/rules.tsv'
-          cmd_options: '-a -j'
+          cmd_options: '-a -j -r zap_report.html'
           allow_issue_writing: false
-
+          # added this to prevent zap from creating its own artifact that can raise an error in github actions because of the naming format(zap naming = zap_results and github dont allow underscores)
+          artifact_name: ''
+          
       # Upload ZAP scan report as artifact
       # Preserves DAST results for 30 days for compliance
       - name: Upload ZAP Report
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: zap-scan-results
-          path: report_html.html
+          name: zap-scan-results 
+          path: zap_report.html
           retention-days: 30
           if-no-files-found: warn
 

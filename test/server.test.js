@@ -17,8 +17,7 @@ import request from 'supertest';
 import { jest } from '@jest/globals';
 
 // Import the actual app for testing
-// Using dynamic import to handle ES modules
-const { app } = await import('../server.js');
+import { app, server } from '../server.js';
 
 describe('Server Health Checks', () => {
   /**

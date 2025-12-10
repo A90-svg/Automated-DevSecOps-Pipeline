@@ -44,9 +44,6 @@ const __dirname = dirname(__filename) || process.cwd();
 const app = express();
 const httpServer = createServer(app);
 
-// Export app for testing purposes
-export { app };
-
 // ===========================================
 // SECURITY MIDDLEWARE CONFIGURATION
 // ===========================================
@@ -364,10 +361,5 @@ process.on('SIGTERM', () => {
   });
 });
 
-// Export server for testing purposes
-export default server;
-
 // Export for testing
-if (process.env.NODE_ENV === 'test') {
-  module.exports = { app, server };
-}
+export { app, server };

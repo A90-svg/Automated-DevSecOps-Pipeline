@@ -1,18 +1,17 @@
 # FinSecure Application's Automated DevSecOps Pipeline
 
-Automated DevSecOps pipeline for a demo fintech application, demonstrating SAST, SCA, and DAST integration with GitHub Actions. **Scope: Proof-of-concept pipeline supporting PDPL and CBB Cybersecurity Framework compliance.**
+Automated DevSecOps pipeline demonstrating SAST, SCA, and DAST integration with GitHub Actions for a fintech demo application. Supports PDPL and CBB Cybersecurity Framework compliance.
 
-## Project Overview
+## Overview
 
 This project implements a comprehensive DevSecOps pipeline for the demo fintech app called **FinSecure**, demonstrating secure software development practices including:
 
-- **SAST** (Static Application Security Testing) with SonarCloud
-- **SCA** (Software Composition Analysis) with Snyk
-- **DAST** (Dynamic Application Security Testing) with OWASP ZAP
-- **Docker** containerization with security best practices
-- **PDPL** and **CBB Cybersecurity Framework** compliance
-- **Security Gates** with merge blocking for high-severity vulnerabilities
-- **Automated Reporting** with severity levels and compliance metrics
+- **SAST**: SonarCloud for static code analysis
+- **SCA**: Snyk for dependency vulnerability scanning  
+- **DAST**: OWASP ZAP for dynamic security testing
+- **Docker**: Containerized deployment with security best practices
+- **Compliance**: PDPL and CBB Cybersecurity Framework reporting
+- **Security Gates**: Automated merge blocking on high-severity vulnerabilities
 
 ### Application Features
 
@@ -114,7 +113,8 @@ Configure the following environment variables in your `.env` file:
 
 ```env
 # Server Configuration
-PORT=3000
+PORT=the_port_you_want_to_use
+NODE_VERSION=the_node_version_you_want_to_use
 NODE_ENV=development
 
 # EmailJS Configuration (for OTP demo)
@@ -122,10 +122,17 @@ EMAILJS_SERVICE_ID=your_service_id
 EMAILJS_TEMPLATE_ID=your_template_id
 EMAILJS_PUBLIC_KEY=your_public_key
 EMAILJS_PRIVATE_KEY=your_private_key
-EMAILJS_FROM_EMAIL=finsecureapp@gmail.com
+
+# SonarCloud Configuration
+SONAR_TOKEN=your_sonarcloud_token_here
+SONAR_ORGANIZATION=your_sonarcloud_org
+SONAR_PROJECT_KEY=your_sonarcloud_project_key
+
+# Snyk Configuration
+SNYK_TOKEN=your_snyk_token_here
 
 # Security
-ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001
+ALLOWED_ORIGINS=the_allowed_origins_you_want_to_use
 ```
 
 ## Running the Application
@@ -200,7 +207,13 @@ The GitHub Actions workflow (`.github/workflows/automated-devsecops-pipeline.yml
    - Blocks merge on high-severity vulnerabilities
    - Generates pass/fail summary
 
-4. **Reporting**
+4. **Docker Compose Deployment**
+   - Builds and starts containers using docker-compose
+   - Performs health checks on deployed services
+   - Tests application endpoints
+   - Ensures proper cleanup on completion
+
+5. **Reporting**
    - Executive summary with compliance metrics
    - Artifact storage (30 days)
    - PDPL and CBB Framework compliance status
@@ -354,50 +367,6 @@ This application includes several security measures:
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-## Pipeline Flow Summary
-
-**Trigger:** Code push to `main`/`develop` or Pull Request  
-**Runtime:** ~13 minutes total  
-**Security Tools:** SonarCloud (SAST) + Snyk (SCA) + OWASP ZAP (DAST)  
-**Decision Point:** Security Gate blocks merge on high-severity findings  
-**Output:** Compliance reports + artifacts + merge decision
-
-## Demo Application Features
-
-The FinSecure demo app includes:
-
-- **Login/Signup**: Email-based authentication
-- **OTP Verification**: EmailJS integration
-- **Dashboard**: Account balance display
-- **Transaction History**: 50+ mock transactions
-- **Logout**: Session management
-- **Responsive Design**: web-friendly interface
-
-## Quality Metrics
-
-### Performance Requirements Met
-
-- **SAST completion**: ≤10 minutes (actual: ~3 minutes)
-- **DAST completion**: ≤15 minutes (actual: ~8 minutes)
-- **Docker build**: ≤5 minutes (actual: ~2 minutes)
-- **Pipeline runtime**: ≤15 minutes (actual: ~13 minutes)
-
-### Security Requirements Met
-
-- **Automated scanning**: On every push/PR
-- **Severity reporting**: High/Medium/Low classification
-- **Merge blocking**: High-severity vulnerabilities
-- **Secrets masking**: 100% via GitHub Secrets
-- **Compliance reporting**: PDPL + CBB Framework metrics
-
-### Docker Compose (Recommended for Development)
-
-```bash
-docker-compose up -d
-```
-
-This builds and runs the application with all dependencies.
-
 ## Troubleshooting
 
 ### Common Issues
@@ -446,7 +415,7 @@ This project is for educational and demonstration purposes only. No part of this
 
 ---
 
-**Project Status:** Ready for testing | **Last Updated:** 2025-12-02
+**Project Status:** Ready for testing | **Last Updated:** 2025-12-10
 
 ## Code Documentation
 
@@ -505,31 +474,6 @@ The pipeline generates compliance reports for:
 - **CBB Cybersecurity Framework**
 - **OWASP Top 10** coverage
 - **Vulnerability severity levels**
-
-## Quick Start
-
-1. **Clone and Install**:
-   ```bash
-   git clone https://github.com/A90-svg/Automated-DevSecOps-Pipeline.git
-   cd Automated-DevSecOps-Pipeline
-   npm ci
-   ```
-
-2. **Configure Environment**:
-   ```bash
-   cp .env.example .env
-   # Edit .env with your settings
-   ```
-
-3. **Run Development**:
-   ```bash
-   npm run dev
-   ```
-
-4. **Access Application**:
-   - URL: http://localhost:3000
-   - Default User: finsecureapp@gmail.com
-   - Default Password: FinSecure123!
 
 ---
 
