@@ -44,9 +44,9 @@ const __dirname = dirname(__filename) || process.cwd();
 const app = express();
 const httpServer = createServer(app);
 
-// ===========================================
+// ==========================================
 // SECURITY MIDDLEWARE CONFIGURATION
-// ===========================================
+// ==========================================
 
 // Helmet: Set security-related HTTP headers
 // Protects against XSS, clickjacking, MIME sniffing, etc.

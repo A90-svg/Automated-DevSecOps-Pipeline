@@ -500,26 +500,18 @@ jobs:
       # Scans running application for common web vulnerabilities
       # Generates HTML report for compliance documentation
       - name: OWASP ZAP Baseline Scan
-        continue-on-error: true  # Allow pipeline to continue if artifact upload fails
-        uses: zaproxy/action-baseline@v0.12.0
+        continue-on-error: false  # Fail pipeline if DAST scan fails
+        uses: zaproxy/action-baseline@v0.15.0
         with:
           target: 'http://localhost:3000'
           rules_file_name: '.zap/rules.tsv'
-          cmd_options: '-a -j -r zap_report.html'
+          cmd_options: '-a -j'
           allow_issue_writing: false
-          # added this to prevent zap from creating its own artifact that can raise an error in github actions because of the naming format(zap naming = zap_results and github dont allow underscores)
-          artifact_name: ''
+          artifact_name: 'zap-scan-results'
           
-      # Upload ZAP scan report as artifact
-      # Preserves DAST results for 30 days for compliance
-      - name: Upload ZAP Report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: zap-scan-results 
-          path: zap_report.html
-          retention-days: 30
-          if-no-files-found: warn
+                
+      # ZAP scan report is automatically uploaded as artifact by the action above
+      # The artifact will be available as 'zap-scan-results' with the HTML report
 
       # Clean up Docker container
       # Ensures proper cleanup regardless of scan outcome
