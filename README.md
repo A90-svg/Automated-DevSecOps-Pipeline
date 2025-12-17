@@ -355,16 +355,17 @@ This application includes several security measures:
 │     └─────────────────┘  └─────────────────┘  └─────────────────┘           │
 └─────────────────────────────────────────────────────────────────────────────┘
 
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                          COMPLIANCE FRAMEWORKS                              │
-│     ┌───────────────────┐                    ┌───────────────────┐          │
-│     │   PDPL            │                    │   CBB FRAMEWORK   │          │
-│     │ (Bahrain)         │                    │  (Cybersecurity)  │          │
-│     │ • Data Privacy    │                    │ • Auto Testing    │          │
-│     │ • Synthetic Data  │                    │ • Access Control  │          │
-│     │ • Audit Trail     │                    │ • Vulnerability   │          │
-│     └───────────────────┘                    └───────────────────┘          │
-└─────────────────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                          COMPLIANCE FRAMEWORKS                                         │
+│     ┌───────────────────┐                    ┌──────────────────────────────┐          │
+│     │   PDPL            │                    │   CBB FRAMEWORK              │          │
+│     │ (Bahrain)         │                    │  (Cybersecurity)             │          │
+│     │ • Data Privacy    │                    │ • Auto Testing               │          │
+│     │ • Synthetic Data  │                    │ • Access Control             │          │
+│     │ • Audit Trail     │                    │ • Vulnerability Management   │          │
+|     | • Secure Storage  │                    │ • Continuous Monitoring      │          |          
+│     └───────────────────┘                    └──────────────────────────────┘          │
+└────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## Troubleshooting

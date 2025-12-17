@@ -201,7 +201,7 @@ const EMAILJS_CONFIG = {
   serviceId: process.env.EMAILJS_SERVICE_ID, // EmailJS service ID
   templateId: process.env.EMAILJS_TEMPLATE_ID, // Email template ID
   publicKey: process.env.EMAILJS_PUBLIC_KEY, // Public API key
-  privateKey: process.env.EMAILJS_PRIVATE_KEY, // Private API key (keep secret)
+  privateKey: process.env.EMAILJS_PRIVATE_KEY, // Private API key
   fromEmail: process.env.EMAILJS_FROM_EMAIL || 'finsecureapp@gmail.com', // Default sender
 };
 
