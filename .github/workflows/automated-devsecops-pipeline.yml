@@ -202,7 +202,7 @@ jobs:
         with:
           args: >
             -Dsonar.qualitygate.wait=false
-            -Dsonar.coverage.exclusions=**/node_modules/**,**/test/**,**/tests/**,**/*.test.js,**/*.spec.js,**/coverage/**,**/dist/**,**/build/**
+            -Dsonar.coverage.exclusions=**
             -Dsonar.projectKey=A90-svg_Automated-DevSecOps-Pipeline
             -Dsonar.organization=a90-svg
             -Dsonar.host.url=https://sonarcloud.io

@@ -304,9 +304,9 @@ app.post('/api/send-otp', validateRequest(otpSchema), async (req, res, next) => 
   }
 });
 
-// ============================================
+// ===========================================
 // SERVER STARTUP & CONFIGURATION
-// ============================================
+// ===========================================
 
 // Get port from environment or use default 3000
 const PORT = process.env.PORT || 3000;
