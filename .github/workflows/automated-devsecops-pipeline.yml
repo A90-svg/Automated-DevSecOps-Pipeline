@@ -234,6 +234,159 @@ jobs:
           
           echo "Scan preparation completed. Checking for issues..."
 
+      # Fetch SonarCloud results and generate severity-based report
+      - name: Fetch SonarCloud Results
+        if: always()
+        run: |
+          echo "=== Fetching SonarCloud Analysis Results ==="
+          
+          # Wait for SonarCloud to process results
+          echo "Waiting for SonarCloud analysis to complete..."
+          sleep 30
+          
+          # Fetch analysis results from SonarCloud API
+          PROJECT_KEY="${{ secrets.SONAR_PROJECT_KEY || 'A90-svg_Automated-DevSecOps-Pipeline' }}"
+          SONAR_TOKEN="${{ secrets.SONAR_TOKEN }}"
+          
+          # Get project metrics
+          echo "Fetching project metrics..."
+          METRICS_RESPONSE=$(curl -s -u "${SONAR_TOKEN}:" \
+            "https://sonarcloud.io/api/measures/component?component=${PROJECT_KEY}&metricKeys=bugs,vulnerabilities,code_smells,sqale_rating,security_hotspots,coverage,reliability_rating,security_rating" \
+            -w "%{http_code}")
+          
+          HTTP_CODE="${METRICS_RESPONSE: -3}"
+          METRICS_RESPONSE="${METRICS_RESPONSE%???}"
+          
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "SonarCloud metrics fetched successfully"
+            echo "$METRICS_RESPONSE" > sonar-metrics.json
+          else
+            echo "Failed to fetch SonarCloud metrics (HTTP $HTTP_CODE)"
+            echo '{"measures":[]}' > sonar-metrics.json
+          fi
+          
+          # Get issues with severity levels
+          echo "Fetching security issues..."
+          ISSUES_RESPONSE=$(curl -s -u "${SONAR_TOKEN}:" \
+            "https://sonarcloud.io/api/issues/search?componentKeys=${PROJECT_KEY}&types=VULNERABILITY,SECURITY_HOTSPOT&ps=500" \
+            -w "%{http_code}")
+          
+          HTTP_CODE="${ISSUES_RESPONSE: -3}"
+          ISSUES_RESPONSE="${ISSUES_RESPONSE%???}"
+          
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "SonarCloud issues fetched successfully"
+            echo "$ISSUES_RESPONSE" > sonar-issues.json
+          else
+            echo "Failed to fetch SonarCloud issues (HTTP $HTTP_CODE)"
+            echo '{"issues":[]}' > sonar-issues.json
+          fi
+
+      # Generate SAST HTML report with severity levels
+      - name: Generate SAST HTML Report
+        if: always()
+        run: |
+          REPORT_DATE=$(date -u '+%Y-%m-%d %H:%M:%S UTC')
+          cat > sonar-security-report.html << EOF
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>SonarCloud Security Scan Report</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+              .header { background: #2c3e50; color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+              .summary { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+              .issue { margin: 15px 0; padding: 15px; border-left: 4px solid #e74c3c; background: white; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+              .severity-blocker { border-left-color: #8b0000; }
+              .severity-critical { border-left-color: #e74c3c; }
+              .severity-major { border-left-color: #f39c12; }
+              .severity-minor { border-left-color: #27ae60; }
+              .severity-info { border-left-color: #3498db; }
+              h1 { margin: 0; }
+              h3 { margin: 0 0 10px 0; color: #2c3e50; }
+              p { margin: 5px 0; }
+              .meta { color: #7f8c8d; font-size: 14px; }
+              .description { margin: 10px 0; line-height: 1.5; }
+              .no-issues { text-align: center; padding: 40px; color: #27ae60; }
+              .metric { display: inline-block; margin: 10px 20px; text-align: center; }
+              .metric-value { font-size: 24px; font-weight: bold; color: #2c3e50; }
+              .metric-label { color: #7f8c8d; font-size: 14px; }
+              .severity-blocker .metric-value { color: #8b0000; }
+              .severity-critical .metric-value { color: #e74c3c; }
+              .severity-major .metric-value { color: #f39c12; }
+              .severity-minor .metric-value { color: #27ae60; }
+              .severity-info .metric-value { color: #3498db; }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <h1>SonarCloud Security Scan Report</h1>
+              <p><strong>Generated:</strong> $REPORT_DATE</p>
+              <p><strong>Project:</strong> Automated DevSecOps Pipeline</p>
+              <p><strong>Scan Type:</strong> Static Application Security Testing (SAST)</p>
+            </div>
+          EOF
+          
+          # Add metrics summary
+          if [ -f "sonar-metrics.json" ] && command -v jq >/dev/null 2>&1; then
+            echo '<div class="summary">' >> sonar-security-report.html
+            echo '<h2>Security Metrics Summary</h2>' >> sonar-security-report.html
+            
+            BUGS=$(jq -r '.component.measures[]? | select(.metric=="bugs") | .value // "0"' sonar-metrics.json 2>/dev/null || echo "0")
+            VULNS=$(jq -r '.component.measures[]? | select(.metric=="vulnerabilities") | .value // "0"' sonar-metrics.json 2>/dev/null || echo "0")
+            HOTSPOTS=$(jq -r '.component.measures[]? | select(.metric=="security_hotspots") | .value // "0"' sonar-metrics.json 2>/dev/null || echo "0")
+            COVERAGE=$(jq -r '.component.measures[]? | select(.metric=="coverage") | .value // "0"' sonar-metrics.json 2>/dev/null || echo "0")
+            RELIABILITY=$(jq -r '.component.measures[]? | select(.metric=="reliability_rating") | .value // "N/A"' sonar-metrics.json 2>/dev/null || echo "N/A")
+            SECURITY=$(jq -r '.component.measures[]? | select(.metric=="security_rating") | .value // "N/A"' sonar-metrics.json 2>/dev/null || echo "N/A")
+            
+            echo '<div class="metric"><div class="metric-value">'$BUGS'</div><div class="metric-label">Bugs</div></div>' >> sonar-security-report.html
+            echo '<div class="metric"><div class="metric-value">'$VULNS'</div><div class="metric-label">Vulnerabilities</div></div>' >> sonar-security-report.html
+            echo '<div class="metric"><div class="metric-value">'$HOTSPOTS'</div><div class="metric-label">Security Hotspots</div></div>' >> sonar-security-report.html
+            echo '<div class="metric"><div class="metric-value">'$COVERAGE'%</div><div class="metric-label">Test Coverage</div></div>' >> sonar-security-report.html
+            echo '<div class="metric"><div class="metric-value">'$RELIABILITY'</div><div class="metric-label">Reliability Rating</div></div>' >> sonar-security-report.html
+            echo '<div class="metric"><div class="metric-value">'$SECURITY'</div><div class="metric-label">Security Rating</div></div>' >> sonar-security-report.html
+            
+            echo '</div>' >> sonar-security-report.html
+          fi
+          
+          # Add detailed issues with severity
+          if [ -f "sonar-issues.json" ] && command -v jq >/dev/null 2>&1; then
+            ISSUE_COUNT=$(jq '.issues | length' sonar-issues.json 2>/dev/null || echo "0")
+            if [ "$ISSUE_COUNT" -gt 0 ]; then
+              echo '<div class="issues">' >> sonar-security-report.html
+              echo '<h2>Security Issues by Severity</h2>' >> sonar-security-report.html
+              
+              jq -r '.issues[]? |
+                "<div class=\"severity-\(.severity|tostring|ascii_downcase) issue\">
+                  <h3>\(.message // "Unknown Issue")</h3>
+                  <p><strong>Severity:</strong> <span class=\"severity-\(.severity|tostring|ascii_downcase)\">\(.severity // "Unknown")</span></p>
+                  <p><strong>Type:</strong> \(.type // "Unknown")</p>
+                  <p><strong>File:</strong> \(.component // "Unknown")</p>
+                  <p><strong>Line:</strong> \(.line // "N/A")</p>
+                  <div class=\"description\"><strong>Description:</strong> \(.message // "No description available")</div>
+                  <p class=\"meta\"><strong>Rule:</strong> \(.rule // "N/A")</p>
+                  <p class=\"meta\"><strong>Debt:</strong> \(.debt // "N/A")</p>
+                </div>"' sonar-issues.json 2>/dev/null >> sonar-security-report.html
+              
+              echo '</div>' >> sonar-security-report.html
+            else
+              echo '<div class="no-issues"><h2>Great News!</h2><p>No security issues detected by SonarCloud.</p></div>' >> sonar-security-report.html
+            fi
+          else
+            echo '<div class="no-issues"><h2>Scan Results</h2><p>SonarCloud scan completed. Detailed results available in SonarCloud dashboard.</p></div>' >> sonar-security-report.html
+          fi
+          
+          echo '</body></html>' >> sonar-security-report.html
+
+      - name: Upload SAST HTML Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sonar-security-report
+          path: sonar-security-report.html
+          retention-days: 30
+          if-no-files-found: warn
+
       # Generate SAST summary report
       - name: SAST Summary
         if: always()
@@ -242,6 +395,7 @@ jobs:
           echo "**Tool**: SonarCloud" >> $GITHUB_STEP_SUMMARY
           echo "**Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
           echo "[View detailed results](https://sonarcloud.io/project/overview?id=${{ secrets.SONAR_PROJECT_KEY || 'A90-svg_Automated-DevSecOps-Pipeline' }})" >> $GITHUB_STEP_SUMMARY
+          echo "[Download HTML Report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
 
   # ============================================
   # JOB 3: SOFTWARE COMPOSITION ANALYSIS (SCA)
