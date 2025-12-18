@@ -216,9 +216,9 @@ const isEmailJSConfigured = () => {
   );
 };
 
-// ============================================
+// =========================================
 // OTP ENDPOINT - EMAIL VERIFICATION
-// ============================================
+// =========================================
 
 // Joi schema for OTP request validation
 // Ensures email is valid and code is exactly 6 digits

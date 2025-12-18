@@ -284,7 +284,7 @@ jobs:
           # Get issues with severity levels
           echo "Fetching security issues..."
           ISSUES_RESPONSE=$(curl -s -u "${SONAR_TOKEN}:" \
-            "https://sonarcloud.io/api/issues/search?componentKeys=${PROJECT_KEY}&types=VULNERABILITY,SECURITY_HOTSPOT&ps=500" \
+            "https://sonarcloud.io/api/issues/search?componentKeys=${PROJECT_KEY}&types=VULNERABILITY,SECURITY_HOTSPOT,BUG,CODE_SMELL&ps=500" \
             -w "%{http_code}")
           
           HTTP_CODE="${ISSUES_RESPONSE: -3}"
@@ -293,9 +293,14 @@ jobs:
           if [ "$HTTP_CODE" = "200" ]; then
             echo "SonarCloud issues fetched successfully"
             echo "$ISSUES_RESPONSE" > sonar-issues.json
+            echo "DEBUG: Response saved to sonar-issues.json"
+            echo "DEBUG: File size: $(wc -c < sonar-issues.json) bytes"
+            echo "DEBUG: Raw response preview:"
+            head -c 200 sonar-issues.json | sed 's/^/          /'
           else
             echo "Failed to fetch SonarCloud issues (HTTP $HTTP_CODE)"
             echo '{"issues":[]}' > sonar-issues.json
+            echo "DEBUG: Using empty issues array due to HTTP error"
           fi
 
       # Generate SAST HTML report with severity levels
@@ -421,7 +426,6 @@ jobs:
           echo "**Tool**: SonarCloud" >> $GITHUB_STEP_SUMMARY
           echo "**Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
           echo "[View detailed results](https://sonarcloud.io/project/overview?id=${{ secrets.SONAR_PROJECT_KEY || 'A90-svg_Automated-DevSecOps-Pipeline' }})" >> $GITHUB_STEP_SUMMARY
-          echo "[Download HTML Report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
 
   # ============================================
   # JOB 3: SOFTWARE COMPOSITION ANALYSIS (SCA)
@@ -594,7 +598,7 @@ jobs:
                 
                 echo '</div>' >> snyk-security-report.html
               else
-                echo '<div class="no-vulns"><h2>Great News!</h2><p>No vulnerabilities found in your dependencies.</p></div>' >> snyk-security-report.html
+                echo '<div class="no-vulns"><h2>Great News!</h2><p>No HIGH severity vulnerabilities found in your dependencies. Check the <a href="https://app.snyk.io/org/" target="_blank">Snyk dashboard</a> for medium/low severity vulnerabilities.</p></div>' >> snyk-security-report.html
               fi
             else
               echo '<div class="no-vulns"><h2>JSON Parsing</h2><p>jq not available for detailed vulnerability parsing.</p></div>' >> snyk-security-report.html
