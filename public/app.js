@@ -31,7 +31,7 @@
 // This section handles data persistence using localStorage.
 // In production, this would be replaced with API calls to a backend.
 //
-// - STORAGE_DB_KEY: Stores user data, transactions, etc.
+// - STORAGE_DB_KEY: Stores application data, transactions, etc.
 // - STORAGE_SESSION_KEY: Stores current login session
 // - All mutations call saveDB() to persist changes
 // - Data survives page refreshes and browser restarts
@@ -82,7 +82,7 @@ const DEFAULT_DB = {
       password: (() => {
         // Check for environment variable first
         const envPassword =
-          typeof import.meta.env !== 'undefined' && import.meta.env.VITE_DEFAULT_PASSWORD
+          import.meta.env !== undefined && import.meta.env.VITE_DEFAULT_PASSWORD
             ? import.meta.env.VITE_DEFAULT_PASSWORD
             : null;
 
@@ -498,7 +498,7 @@ const DEFAULT_DB = {
 // - Helper functions provide safe access to user data
 
 // Mutable state for runtime - cloned from defaults to avoid mutation
-let db = JSON.parse(JSON.stringify(DEFAULT_DB)); // Deep clone for safe mutation
+let db = structuredClone(DEFAULT_DB); // Deep clone for safe mutation
 
 /**
  * Get current user data with fallback
@@ -513,9 +513,7 @@ function getCurrentUser() {
     db.currentUser = firstUserEmail;
     if (!db.users[firstUserEmail]) {
       // Clone default user data if user doesn't exist
-      db.users[firstUserEmail] = JSON.parse(
-        JSON.stringify(DEFAULT_DB.users['finsecureapp@gmail.com'])
-      );
+      db.users[firstUserEmail] = structuredClone(DEFAULT_DB.users['finsecureapp@gmail.com']);
     }
   }
   return db.users[db.currentUser];
@@ -551,7 +549,9 @@ function saveDB() {
   try {
     localStorage.setItem(STORAGE_DB_KEY, JSON.stringify(db));
   } catch (e) {
-    console.error('Failed to save DB to localStorage:', e);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Failed to save DB to localStorage:', e);
+    }
   }
 }
 
@@ -581,7 +581,9 @@ function loadDB() {
       }
     });
   } catch (e) {
-    console.error('Failed to load DB from localStorage:', e);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Failed to load DB from localStorage:', e);
+    }
   }
 }
 
@@ -599,7 +601,9 @@ function saveSession() {
       })
     );
   } catch (e) {
-    // Failed to save session to localStorage
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Failed to save session to localStorage:', e);
+    }
   }
 }
 function loadSession() {
@@ -610,14 +614,18 @@ function loadSession() {
     session.loggedIn = !!parsed.loggedIn;
     session.email = parsed.email || null;
   } catch (e) {
-    // Failed to load session from localStorage
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Failed to load session from localStorage:', e);
+    }
   }
 }
 function clearSessionStorage() {
   try {
     localStorage.removeItem(STORAGE_SESSION_KEY);
   } catch (e) {
-    // Failed to clear session storage
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Failed to clear session storage:', e);
+    }
   }
 }
 
@@ -991,7 +999,7 @@ function checkPasswordPolicy(pw) {
   const long = pw.length >= 12;
   const upper = /[A-Z]/.test(pw);
   const lower = /[a-z]/.test(pw);
-  const digit = /[0-9]/.test(pw);
+  const digit = /\d/.test(pw);
   const special = /[^A-Za-z0-9]/.test(pw);
   return long && upper && lower && digit && special;
 }
@@ -1062,8 +1070,8 @@ function handleRoute() {
 }
 
 // Wire routing events
-window.addEventListener('hashchange', handleRoute);
-window.addEventListener('load', () => {
+globalThis.addEventListener('hashchange', handleRoute);
+globalThis.addEventListener('load', () => {
   // Load stored data or use defaults
   const stored = localStorage.getItem(STORAGE_DB_KEY);
   if (stored) {
@@ -1084,23 +1092,23 @@ window.addEventListener('load', () => {
         delete parsed.transactions;
       }
       // Ensure default user exists
-      if (!parsed.users || !parsed.users['finsecureapp@gmail.com']) {
+      if (!parsed.users?.['finsecureapp@gmail.com']) {
         if (!parsed.users) parsed.users = {};
-        parsed.users['finsecureapp@gmail.com'] = JSON.parse(
-          JSON.stringify(DEFAULT_DB.users['finsecureapp@gmail.com'])
-        );
+        parsed.users['finsecureapp@gmail.com'] = structuredClone(DEFAULT_DB.users['finsecureapp@gmail.com']);
       }
       // Load the parsed data
       loadDB();
     } catch (e) {
       // If parsing fails, reset to defaults
-      // Failed to parse stored DB, resetting to defaults
-      db = JSON.parse(JSON.stringify(DEFAULT_DB));
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to parse stored DB, resetting to defaults:', e);
+      }
+      db = structuredClone(DEFAULT_DB);
       saveDB();
     }
   } else {
     // No stored data, use defaults
-    db = JSON.parse(JSON.stringify(DEFAULT_DB));
+    db = structuredClone(DEFAULT_DB);
     saveDB();
   }
 
@@ -1211,7 +1219,7 @@ btnSignup.addEventListener('click', () => {
   }
 
   // Initialize user with default balance and empty transactions if new
-  if (!db.users[email]) {
+  if (db.users[email] === undefined) {
     db.users[email] = {
       first,
       last,

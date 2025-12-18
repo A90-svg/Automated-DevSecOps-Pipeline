@@ -348,28 +348,6 @@ jobs:
             </div>
           EOF
           
-          # Add metrics summary
-          if [ -f "sonar-metrics.json" ] && command -v jq >/dev/null 2>&1; then
-            echo '<div class="summary">' >> sonar-security-report.html
-            echo '<h2>Security Metrics Summary</h2>' >> sonar-security-report.html
-            
-            BUGS=$(jq -r '.component.measures[]? | select(.metric=="bugs") | .value // "0"' sonar-metrics.json 2>/dev/null || echo "0")
-            VULNS=$(jq -r '.component.measures[]? | select(.metric=="vulnerabilities") | .value // "0"' sonar-metrics.json 2>/dev/null || echo "0")
-            HOTSPOTS=$(jq -r '.component.measures[]? | select(.metric=="security_hotspots") | .value // "0"' sonar-metrics.json 2>/dev/null || echo "0")
-            COVERAGE=$(jq -r '.component.measures[]? | select(.metric=="coverage") | .value // "0"' sonar-metrics.json 2>/dev/null || echo "0")
-            RELIABILITY=$(jq -r '.component.measures[]? | select(.metric=="reliability_rating") | .value // "N/A"' sonar-metrics.json 2>/dev/null || echo "N/A")
-            SECURITY=$(jq -r '.component.measures[]? | select(.metric=="security_rating") | .value // "N/A"' sonar-metrics.json 2>/dev/null || echo "N/A")
-            
-            echo '<div class="metric"><div class="metric-value">'$BUGS'</div><div class="metric-label">Bugs</div></div>' >> sonar-security-report.html
-            echo '<div class="metric"><div class="metric-value">'$VULNS'</div><div class="metric-label">Vulnerabilities</div></div>' >> sonar-security-report.html
-            echo '<div class="metric"><div class="metric-value">'$HOTSPOTS'</div><div class="metric-label">Security Hotspots</div></div>' >> sonar-security-report.html
-            echo '<div class="metric"><div class="metric-value">'$COVERAGE'%</div><div class="metric-label">Test Coverage</div></div>' >> sonar-security-report.html
-            echo '<div class="metric"><div class="metric-value">'$RELIABILITY'</div><div class="metric-label">Reliability Rating</div></div>' >> sonar-security-report.html
-            echo '<div class="metric"><div class="metric-value">'$SECURITY'</div><div class="metric-label">Security Rating</div></div>' >> sonar-security-report.html
-            
-            echo '</div>' >> sonar-security-report.html
-          fi
-          
           # Add detailed issues with severity
           # Debug: Show raw JSON content
           echo "<!-- DEBUG: SonarCloud raw JSON content -->" >> sonar-security-report.html

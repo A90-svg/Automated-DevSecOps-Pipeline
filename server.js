@@ -26,9 +26,9 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { createServer } from 'http';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { createServer } from 'node:http';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import Joi from 'joi';
@@ -58,7 +58,7 @@ app.use(
       directives: {
         defaultSrc: ["'self'"],
         scriptSrc: ["'self'"],
-        styleSrc: ["'self'", "'unsafe-inline'"], // Inline styles needed for SPA
+        styleSrc: ["'self'"], // Removed unsafe-inline for better security
         imgSrc: ["'self'", 'data:'], // Allow data: URLs for inline images
         connectSrc: ["'self'", 'https://api.emailjs.com'], // EmailJS API
         fontSrc: ["'self'"],
@@ -68,6 +68,26 @@ app.use(
         frameAncestors: ["'none'"], // Prevent being embedded in frames
         baseUri: ["'self'"],
         formAction: ["'self'"],
+        upgradeInsecureRequests: [], // Upgrade HTTP to HTTPS
+      },
+    },
+    crossOriginEmbedderPolicy: { policy: "require-corp" }, // Fix Spectre vulnerability
+    crossOriginOpenerPolicy: { policy: "same-origin" },
+    crossOriginResourcePolicy: [{ policy: "cross-origin" }],
+    permissionsPolicy: {
+      features: {
+        camera: ["'none'"],
+        microphone: ["'none'"],
+        geolocation: ["'none'"],
+        payment: ["'none'"],
+        usb: ["'none'"],
+        magnetometer: ["'none'"],
+        gyroscope: ["'none'"],
+        accelerometer: ["'none'"],
+        fullscreen: ["'none'"],
+        encryptedMedia: ["'none'"],
+        pictureInPicture: ["'none'"],
+        webShare: ["'none'"],
       },
     },
   })
@@ -84,6 +104,22 @@ app.use(
     optionsSuccessStatus: 200,
   })
 );
+
+// Custom security headers middleware
+app.use((req, res, next) => {
+  // Cache control headers
+  res.setHeader('Cache-Control', 'no-store, must-revalidate, private');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  
+  // Sec-Fetch headers (client-side controlled, but we can set defaults)
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  
+  next();
+});
 
 // ===========================================
 // RATE LIMITING & REQUEST PARSING
@@ -153,10 +189,13 @@ app.use(
   })
 );
 
-// Request logging middleware (placeholder)
+// Request logging middleware
 // In production, you might want to add actual logging here
 app.use((req, res, next) => {
-  // TODO: Add request logging for monitoring and debugging
+  // Log request method, URL, and timestamp for monitoring and debugging
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  }
   next();
 });
 
@@ -294,6 +333,9 @@ app.post('/api/send-otp', validateRequest(otpSchema), async (req, res, next) => 
       });
     } catch (err) {
       // Handle EmailJS API errors
+      if (process.env.NODE_ENV === 'development') {
+        console.error('EmailJS API error:', err);
+      }
       res.status(500).json({
         error: 'An error occurred while sending the verification email.',
       });
@@ -351,11 +393,11 @@ process.on('uncaughtException', (err) => {
 // Handle process termination (SIGTERM)
 // Ensures graceful shutdown when container orchestrator sends SIGTERM
 process.on('SIGTERM', () => {
-  if (process.env.NODE_ENV !== 'test') {
+  if (process.env.NODE_ENV === 'development') {
     console.log('SIGTERM received. Shutting down gracefully');
   }
   server.close(() => {
-    if (process.env.NODE_ENV !== 'test') {
+    if (process.env.NODE_ENV === 'development') {
       console.log('Process terminated');
     }
   });
