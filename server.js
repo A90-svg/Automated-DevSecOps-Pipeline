@@ -160,9 +160,9 @@ const validateRequest = (schema) => (req, res, next) => {
   next(); // Continue to next middleware if validation passes
 };
 
-// ===========================================
+// ==========================================
 // ERROR HANDLING & STATIC FILES
-// ===========================================
+// ==========================================
 
 // Global error handling middleware
 // Catches all errors that occur in the application

@@ -308,7 +308,7 @@ jobs:
         if: always()
         run: |
           REPORT_DATE=$(date -u '+%Y-%m-%d %H:%M:%S UTC')
-          cat > sonar-security-report.html << EOF
+          cat > sonar-security-report.html << 'EOF'
           <!DOCTYPE html>
           <html>
           <head>
@@ -381,9 +381,9 @@ jobs:
             else
               echo '<div class="no-issues"><h2>Great News!</h2><p>No HIGH severity security issues detected by SonarCloud. Check the <a href="https://sonarcloud.io/project/overview?id=${{ secrets.SONAR_PROJECT_KEY || 'A90-svg_Automated-DevSecOps-Pipeline' }}" target="_blank">SonarCloud dashboard</a> for medium/low severity issues.</p></div>' >> sonar-security-report.html
             fi
-          # else
-          #   echo '<div class="no-issues"><h2>Scan Results</h2><p>SonarCloud scan completed. Detailed results available in SonarCloud dashboard.</p></div>' >> sonar-security-report.html
-          # fi
+          else
+            echo '<div class="no-issues"><h2>Scan Results</h2><p>SonarCloud scan completed. Detailed results available in <a href="https://sonarcloud.io/project/overview?id=${{ secrets.SONAR_PROJECT_KEY || 'A90-svg_Automated-DevSecOps-Pipeline' }}" target="_blank">SonarCloud dashboard</a>.</p></div>' >> sonar-security-report.html
+          fi
           
           echo '</body></html>' >> sonar-security-report.html
 
