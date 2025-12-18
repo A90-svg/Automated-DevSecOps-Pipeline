@@ -71,9 +71,9 @@ app.use(
         upgradeInsecureRequests: [], // Upgrade HTTP to HTTPS
       },
     },
-    crossOriginEmbedderPolicy: { policy: "require-corp" }, // Fix Spectre vulnerability
-    crossOriginOpenerPolicy: { policy: "same-origin" },
-    crossOriginResourcePolicy: [{ policy: "cross-origin" }],
+    crossOriginEmbedderPolicy: { policy: 'require-corp' }, // Fix Spectre vulnerability
+    crossOriginOpenerPolicy: { policy: 'same-origin' },
+    crossOriginResourcePolicy: [{ policy: 'cross-origin' }],
     permissionsPolicy: {
       features: {
         camera: ["'none'"],
@@ -111,13 +111,13 @@ app.use((req, res, next) => {
   res.setHeader('Cache-Control', 'no-store, must-revalidate, private');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
-  
+
   // Sec-Fetch headers (client-side controlled, but we can set defaults)
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('X-XSS-Protection', '1; mode=block');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  
+
   next();
 });
 
@@ -181,10 +181,23 @@ const errorHandler = (err, req, res, _next) => {
 app.use(
   express.static(join(__dirname, 'public'), {
     // Set additional security headers on static responses
-    setHeaders: (res) => {
+    setHeaders: (res, path) => {
       res.setHeader('X-Content-Type-Options', 'nosniff'); // Prevent MIME sniffing
       res.setHeader('X-Frame-Options', 'DENY'); // Prevent clickjacking
       res.setHeader('X-XSS-Protection', '1; mode=block'); // Enable XSS protection
+      // Add CSP headers for static files to fix ZAP issues
+      if (path.endsWith('.txt') || path.endsWith('.xml')) {
+        res.setHeader(
+          'Content-Security-Policy',
+          "default-src 'self'; frame-ancestors 'none'; form-action 'self'"
+        );
+      }
+      // Add cache control headers for informational ZAP issues
+      if (path.endsWith('.txt') || path.endsWith('.xml')) {
+        res.setHeader('Cache-Control', 'public, max-age=86400'); // Allow caching for static files
+      } else {
+        res.setHeader('Cache-Control', 'no-store, must-revalidate, private');
+      }
     },
   })
 );

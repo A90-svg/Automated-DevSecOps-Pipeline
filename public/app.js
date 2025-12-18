@@ -67,8 +67,8 @@ function generateSecureRef(prefix) {
 // This defines the initial state when no data exists in localStorage.
 // Developers can modify this to customize the demo experience.
 //
-// IMPORTANT: This is demo data only. In production, all data
-// would come from a secure backend API.
+// IMPORTANT: This is demo data only.
+// API calls would be handled by secure backend services
 
 const DEFAULT_DB = {
   // Users collection - stored as object with email as key
@@ -1094,7 +1094,9 @@ globalThis.addEventListener('load', () => {
       // Ensure default user exists
       if (!parsed.users?.['finsecureapp@gmail.com']) {
         if (!parsed.users) parsed.users = {};
-        parsed.users['finsecureapp@gmail.com'] = structuredClone(DEFAULT_DB.users['finsecureapp@gmail.com']);
+        parsed.users['finsecureapp@gmail.com'] = structuredClone(
+          DEFAULT_DB.users['finsecureapp@gmail.com']
+        );
       }
       // Load the parsed data
       loadDB();

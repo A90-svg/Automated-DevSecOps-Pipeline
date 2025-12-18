@@ -285,7 +285,7 @@ jobs:
           echo "Fetching security issues..."
           ISSUES_RESPONSE=$(curl -s -u "${SONAR_TOKEN}:" \
             "https://sonarcloud.io/api/issues/search?componentKeys=${PROJECT_KEY}&statuses=OPEN,CONFIRMED,REOPENED&ps=500" \
-            -w "%{http_code}")
+            -w "%{http_code}" --max-time 300 --retry 3 --retry-delay 10
           
           HTTP_CODE="${ISSUES_RESPONSE: -3}"
           ISSUES_RESPONSE="${ISSUES_RESPONSE%???}"
@@ -300,7 +300,7 @@ jobs:
           else
             echo "Failed to fetch SonarCloud issues (HTTP $HTTP_CODE)"
             echo '{"issues":[]}' > sonar-issues.json
-            echo "DEBUG: Using empty issues array due to HTTP error"
+            echo "DEBUG: Using empty issues array due to API failure"
           fi
 
       # Generate SAST HTML report with severity levels
