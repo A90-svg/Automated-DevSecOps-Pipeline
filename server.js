@@ -177,7 +177,6 @@ const errorHandler = (err, req, res, _next) => {
 };
 
 // Serve static files from public directory with security headers
-// This serves the SPA frontend (HTML, CSS, JS, images)
 app.use(
   express.static(join(__dirname, 'public'), {
     // Set additional security headers on static responses
@@ -185,6 +184,11 @@ app.use(
       res.setHeader('X-Content-Type-Options', 'nosniff'); // Prevent MIME sniffing
       res.setHeader('X-Frame-Options', 'DENY'); // Prevent clickjacking
       res.setHeader('X-XSS-Protection', '1; mode=block'); // Enable XSS protection
+      // Add Permissions Policy header for all static files
+      res.setHeader(
+        'Permissions-Policy',
+        'camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=(), fullscreen=(), encrypted-media=(), picture-in-picture=()'
+      );
       // Add CSP headers for static files to fix ZAP issues
       if (path.endsWith('.txt') || path.endsWith('.xml')) {
         res.setHeader(

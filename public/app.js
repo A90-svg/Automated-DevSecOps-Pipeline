@@ -481,7 +481,7 @@ const DEFAULT_DB = {
       ],
     },
   },
-  // Current logged-in user email (for quick access)
+  // Active session data
   currentUser: 'finsecureapp@gmail.com',
   pendingReset: false, // Flag for password reset flow
   pendingOTP: null, // Store pending OTP verification data
