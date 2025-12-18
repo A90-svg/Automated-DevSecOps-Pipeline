@@ -285,7 +285,7 @@ jobs:
           echo "Fetching security issues..."
           ISSUES_RESPONSE=$(curl -s -u "${SONAR_TOKEN}:" \
             "https://sonarcloud.io/api/issues/search?componentKeys=${PROJECT_KEY}&statuses=OPEN,CONFIRMED,REOPENED&ps=500" \
-            -w "%{http_code}" --max-time 300 --retry 3 --retry-delay 10
+            -w "%{http_code}" --max-time 300 --retry 3 --retry-delay 10)
           
           HTTP_CODE="${ISSUES_RESPONSE: -3}"
           ISSUES_RESPONSE="${ISSUES_RESPONSE%???}"
@@ -381,9 +381,9 @@ jobs:
             else
               echo '<div class="no-issues"><h2>Great News!</h2><p>No HIGH severity security issues detected by SonarCloud. Check the <a href="https://sonarcloud.io/project/overview?id=${{ secrets.SONAR_PROJECT_KEY || 'A90-svg_Automated-DevSecOps-Pipeline' }}" target="_blank">SonarCloud dashboard</a> for medium/low severity issues.</p></div>' >> sonar-security-report.html
             fi
-          else
-            echo '<div class="no-issues"><h2>Scan Results</h2><p>SonarCloud scan completed. Detailed results available in SonarCloud dashboard.</p></div>' >> sonar-security-report.html
-          fi
+          # else
+          #   echo '<div class="no-issues"><h2>Scan Results</h2><p>SonarCloud scan completed. Detailed results available in SonarCloud dashboard.</p></div>' >> sonar-security-report.html
+          # fi
           
           echo '</body></html>' >> sonar-security-report.html
 
