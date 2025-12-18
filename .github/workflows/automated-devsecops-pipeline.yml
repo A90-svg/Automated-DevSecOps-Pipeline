@@ -284,7 +284,7 @@ jobs:
           # Get issues with severity levels
           echo "Fetching security issues..."
           ISSUES_RESPONSE=$(curl -s -u "${SONAR_TOKEN}:" \
-            "https://sonarcloud.io/api/issues/search?componentKeys=${PROJECT_KEY}&types=VULNERABILITY,SECURITY_HOTSPOT,BUG,CODE_SMELL&ps=500" \
+            "https://sonarcloud.io/api/issues/search?componentKeys=${PROJECT_KEY}&statuses=OPEN,CONFIRMED,REOPENED&ps=500" \
             -w "%{http_code}")
           
           HTTP_CODE="${ISSUES_RESPONSE: -3}"
@@ -401,7 +401,7 @@ jobs:
               
               echo '</div>' >> sonar-security-report.html
             else
-              echo '<div class="no-issues"><h2>Great News!</h2><p>No security issues detected by SonarCloud.</p></div>' >> sonar-security-report.html
+              echo '<div class="no-issues"><h2>Great News!</h2><p>No HIGH severity security issues detected by SonarCloud. Check the <a href="https://sonarcloud.io/project/overview?id=${{ secrets.SONAR_PROJECT_KEY || 'A90-svg_Automated-DevSecOps-Pipeline' }}" target="_blank">SonarCloud dashboard</a> for medium/low severity issues.</p></div>' >> sonar-security-report.html
             fi
           else
             echo '<div class="no-issues"><h2>Scan Results</h2><p>SonarCloud scan completed. Detailed results available in SonarCloud dashboard.</p></div>' >> sonar-security-report.html
@@ -543,7 +543,6 @@ jobs:
             
             # Try multiple JSON parsing approaches
             if command -v jq >/dev/null 2>&1; then
-              echo "Using jq for JSON parsing..." >> snyk-security-report.html
               DEPS=$(jq -r '.dependencyCount // "N/A"' snyk-results.json 2>/dev/null || echo "N/A")
               VULNS=$(jq -r '.vulnerabilities | length // "0"' snyk-results.json 2>/dev/null || echo "0")
               STATUS=$(jq -r '.ok // "false"' snyk-results.json 2>/dev/null || echo "false")
@@ -709,6 +708,11 @@ jobs:
             fi
             done
 
+      # Pre-pull ZAP Docker image to avoid timeout
+      # This ensures image is available before scan starts
+      - name: Pre-pull ZAP Docker Image
+        run: docker pull ghcr.io/zaproxy/zaproxy:stable
+
       # Run OWASP ZAP baseline security scan
       # Scans running application for common web vulnerabilities
       # Generates HTML report for compliance documentation
@@ -721,7 +725,6 @@ jobs:
           cmd_options: '-a -j'
           allow_issue_writing: false
           artifact_name: 'zap-scan-results'
-          
                 
       # ZAP scan report is automatically uploaded as artifact by the action above
       # The artifact will be available as 'zap-scan-results' with the HTML report
