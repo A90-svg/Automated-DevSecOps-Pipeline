@@ -324,9 +324,9 @@ const server = httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`App: http://localhost:${PORT}`);
 });
 
-// ============================================
+// ===========================================
 // PROCESS HANDLERS - GRACEFUL SHUTDOWN
-// ============================================
+// ===========================================
 
 // Handle unhandled promise rejections
 // Prevents the application from hanging on unhandled promises

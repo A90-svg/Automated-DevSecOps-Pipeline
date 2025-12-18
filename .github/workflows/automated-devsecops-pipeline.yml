@@ -242,7 +242,23 @@ jobs:
           
           # Wait for SonarCloud to process results
           echo "Waiting for SonarCloud analysis to complete..."
-          sleep 30
+          sleep 60  # Increased wait time for processing
+          
+          # Debug: Check if SonarCloud task completed
+          echo "Checking SonarCloud task status..."
+          TASK_STATUS_RESPONSE=$(curl -s -u "${SONAR_TOKEN}:" \
+            "https://sonarcloud.io/api/ce/task?component=${PROJECT_KEY}" \
+            -w "%{http_code}")
+          
+          HTTP_CODE="${TASK_STATUS_RESPONSE: -3}"
+          TASK_STATUS_RESPONSE="${TASK_STATUS_RESPONSE%???}"
+          
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "SonarCloud task status fetched successfully"
+            echo "$TASK_STATUS_RESPONSE" > sonar-task-status.json
+          else
+            echo "Failed to fetch SonarCloud task status (HTTP $HTTP_CODE)"
+          fi
           
           # Fetch analysis results from SonarCloud API
           PROJECT_KEY="${{ secrets.SONAR_PROJECT_KEY || 'A90-svg_Automated-DevSecOps-Pipeline' }}"
@@ -350,8 +366,18 @@ jobs:
           fi
           
           # Add detailed issues with severity
+          # Debug: Show raw JSON content
+          echo "<!-- DEBUG: SonarCloud raw JSON content -->" >> sonar-security-report.html
+          if [ -f "sonar-issues.json" ]; then
+            echo "<!-- Issues JSON file exists and has $(wc -c < sonar-issues.json) bytes -->" >> sonar-security-report.html
+            echo "<!-- First 500 chars: $(head -c 500 sonar-issues.json) -->" >> sonar-security-report.html
+          else
+            echo "<!-- ERROR: sonar-issues.json not found -->" >> sonar-security-report.html
+          fi
+          
           if [ -f "sonar-issues.json" ] && command -v jq >/dev/null 2>&1; then
             ISSUE_COUNT=$(jq '.issues | length' sonar-issues.json 2>/dev/null || echo "0")
+            echo "<!-- DEBUG: Found $ISSUE_COUNT SonarCloud issues -->" >> sonar-security-report.html
             if [ "$ISSUE_COUNT" -gt 0 ]; then
               echo '<div class="issues">' >> sonar-security-report.html
               echo '<h2>Security Issues by Severity</h2>' >> sonar-security-report.html
@@ -497,14 +523,25 @@ jobs:
             </div>
           EOF
           
+          # Debug: Show raw JSON content
+          echo "<!-- DEBUG: Raw JSON content -->" >> snyk-security-report.html
+          if [ -f "snyk-results.json" ]; then
+            echo "<!-- JSON file exists and has $(wc -c < snyk-results.json) bytes -->" >> snyk-security-report.html
+            echo "<!-- First 500 chars: $(head -c 500 snyk-results.json) -->" >> snyk-security-report.html
+          else
+            echo "<!-- ERROR: snyk-results.json not found -->" >> snyk-security-report.html
+          fi
+          
           # Add detailed scan metrics from JSON
           if [ -f "snyk-results.json" ]; then
             echo '<div class="summary">' >> snyk-security-report.html
             echo '<h2>Scan Summary</h2>' >> snyk-security-report.html
             
+            # Try multiple JSON parsing approaches
             if command -v jq >/dev/null 2>&1; then
+              echo "Using jq for JSON parsing..." >> snyk-security-report.html
               DEPS=$(jq -r '.dependencyCount // "N/A"' snyk-results.json 2>/dev/null || echo "N/A")
-              VULNS=$(jq -r '.uniqueCount // "0"' snyk-results.json 2>/dev/null || echo "0")
+              VULNS=$(jq -r '.vulnerabilities | length // "0"' snyk-results.json 2>/dev/null || echo "0")
               STATUS=$(jq -r '.ok // "false"' snyk-results.json 2>/dev/null || echo "false")
               SUMMARY=$(jq -r '.summary // "No summary available"' snyk-results.json 2>/dev/null || echo "No summary")
               ORG=$(jq -r '.org // "Unknown"' snyk-results.json 2>/dev/null || echo "Unknown")
@@ -516,6 +553,21 @@ jobs:
               echo '<div class="metric"><div class="metric-value">'$ORG'</div><div class="metric-label">Organization</div></div>' >> snyk-security-report.html
               echo '<p><strong>Project:</strong> '$PROJECT'</p>' >> snyk-security-report.html
               echo '<p><strong>Summary:</strong> '$SUMMARY'</p>' >> snyk-security-report.html
+            else
+              echo "jq not available, using Node.js for JSON parsing..." >> snyk-security-report.html
+              # Fallback to Node.js parsing
+              node -e "
+                try {
+                  const data = JSON.parse(require('fs').readFileSync('snyk-results.json', 'utf8'));
+                  console.log('<div class=\"metric\"><div class=\"metric-value\">' + (data.dependencyCount || 'N/A') + '</div><div class=\"metric-label\">Dependencies</div></div>');
+                  console.log('<div class=\"metric\"><div class=\"metric-value\">' + (data.vulnerabilities ? data.vulnerabilities.length : '0') + '</div><div class=\"metric-label\">Vulnerabilities</div></div>');
+                  console.log('<div class=\"metric\"><div class=\"metric-value\">' + (data.ok || 'false') + '</div><div class=\"metric-label\">Overall Status</div></div>');
+                  console.log('<p><strong>Project:</strong> ' + (data.projectName || 'Unknown') + '</p>');
+                  console.log('<p><strong>Summary:</strong> ' + (data.summary || 'No summary') + '</p>');
+                } catch (e) {
+                  console.log('<p>JSON parsing error: ' + e.message + '</p>');
+                }
+              " >> snyk-security-report.html
             fi
             
             echo '</div>' >> snyk-security-report.html
@@ -523,6 +575,7 @@ jobs:
             # Add vulnerabilities details in readable format
             if command -v jq >/dev/null 2>&1; then
               VULN_COUNT=$(jq '.vulnerabilities | length' snyk-results.json 2>/dev/null || echo "0")
+              echo "<!-- DEBUG: Found $VULN_COUNT vulnerabilities -->" >> snyk-security-report.html
               if [ "$VULN_COUNT" -gt 0 ]; then
                 echo '<div class="vulnerabilities">' >> snyk-security-report.html
                 echo '<h2>Vulnerability Details</h2>' >> snyk-security-report.html
@@ -543,6 +596,8 @@ jobs:
               else
                 echo '<div class="no-vulns"><h2>Great News!</h2><p>No vulnerabilities found in your dependencies.</p></div>' >> snyk-security-report.html
               fi
+            else
+              echo '<div class="no-vulns"><h2>JSON Parsing</h2><p>jq not available for detailed vulnerability parsing.</p></div>' >> snyk-security-report.html
             fi
             
             # Add license policy information
