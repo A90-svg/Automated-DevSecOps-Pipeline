@@ -348,6 +348,9 @@ jobs:
             </div>
           EOF
           
+          # Replace the placeholder with actual date
+          sed -i "s/\$REPORT_DATE/$REPORT_DATE/g" sonar-security-report.html
+          
           # Add detailed issues with severity
           # Debug: Show raw JSON content
           echo "<!-- DEBUG: SonarCloud raw JSON content -->" >> sonar-security-report.html
