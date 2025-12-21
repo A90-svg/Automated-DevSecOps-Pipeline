@@ -247,6 +247,12 @@ app.get('/', (req, res) => {
   res.sendFile(join(__dirname, 'public', 'index.html'));
 });
 
+// Add a simple vulnerable endpoint for ZAP to easily detect
+app.get('/demo/vuln/simple-xss', (req, res) => {
+  const input = req.query.input || '';
+  res.send(`<html><body><h1>Hello ${input}</h1></body></html>`);
+});
+
 // ============================================
 // EMAILJS CONFIGURATION
 // ============================================
@@ -426,15 +432,15 @@ export { app, server };
 // ==========================================
 // DEMONSTRATION VULNERABILITIES (FOR THESIS DEMO)
 // ==========================================
-// 
+//
 // This section contains intentionally vulnerable code for demonstrating
 // how the DevSecOps pipeline detects and blocks security issues.
-// 
+//
 // TO ENABLE VULNERABILITIES FOR DEMO:
 // 1. Uncomment the desired vulnerability sections below
 // 2. Push changes to trigger pipeline
 // 3. Observe pipeline failing at security gates
-// 
+//
 // TO DISABLE VULNERABILITIES (NORMAL OPERATION):
 // 1. Keep all vulnerability sections commented out
 // 2. Pipeline should pass all security scans
@@ -446,7 +452,6 @@ export { app, server };
 // SAST VULNERABILITIES (SonarCloud Detection)
 // ==========================================
 
-
 // === SQL INJECTION VULNERABILITY (Critical Severity) ===
 // This will be detected by SonarCloud as a critical security hotspot
 app.get('/demo/vuln/sql-injection/:id', (req, res) => {
@@ -454,21 +459,19 @@ app.get('/demo/vuln/sql-injection/:id', (req, res) => {
   // VULNERABLE: Direct string concatenation creates SQL injection risk
   const query = `SELECT * FROM users WHERE id = ${userId}`;
   console.log('Executing vulnerable query:', query);
-  res.json({ 
+  res.json({
     message: 'SQL injection vulnerable endpoint',
     query: query,
     severity: 'CRITICAL',
-    type: 'SAST - SQL Injection'
+    type: 'SAST - SQL Injection',
   });
 });
 
-
-
 // === HARD-CODED CREDENTIALS VULNERABILITY (Critical Severity) ===
 // SonarCloud will detect these as critical security issues
-const DEMO_API_KEY = "sk-1234567890abcdef1234567890abcdef1234567890";
-const DEMO_DB_PASSWORD = "admin123";
-const DEMO_JWT_SECRET = "my-secret-jwt-key-for-demo";
+const DEMO_API_KEY = 'sk-1234567890abcdef1234567890abcdef1234567890';
+const DEMO_DB_PASSWORD = 'admin123';
+const DEMO_JWT_SECRET = 'my-secret-jwt-key-for-demo';
 
 app.get('/demo/vuln/hardcoded-creds', (req, res) => {
   res.json({
@@ -476,30 +479,28 @@ app.get('/demo/vuln/hardcoded-creds', (req, res) => {
     exposedData: {
       apiKey: DEMO_API_KEY.substring(0, 8) + '...',
       dbPassword: DEMO_DB_PASSWORD.replace(/./g, '*'),
-      jwtSecret: DEMO_JWT_SECRET.replace(/./g, '*')
+      jwtSecret: DEMO_JWT_SECRET.replace(/./g, '*'),
     },
     severity: 'CRITICAL',
-    type: 'SAST - Hard-coded Credentials'
+    type: 'SAST - Hard-coded Credentials',
   });
 });
-
-
 
 // === COMMAND INJECTION VULNERABILITY (Critical Severity) ===
 // SonarCloud will detect this as a critical command injection risk
 app.post('/demo/vuln/command-injection', (req, res) => {
   const { filename } = req.body;
   const { exec } = require('child_process');
-  
+
   // VULNERABLE: User input directly concatenated into shell command
   const command = `ls -la ${filename}`;
-  
+
   exec(command, { timeout: 5000 }, (error, stdout, stderr) => {
     if (error) {
-      return res.status(500).json({ 
+      return res.status(500).json({
         error: error.message,
         severity: 'CRITICAL',
-        type: 'SAST - Command Injection'
+        type: 'SAST - Command Injection',
       });
     }
     res.json({
@@ -507,62 +508,56 @@ app.post('/demo/vuln/command-injection', (req, res) => {
       command: command,
       result: stdout,
       severity: 'CRITICAL',
-      type: 'SAST - Command Injection'
+      type: 'SAST - Command Injection',
     });
   });
 });
-
-
 
 // === WEAK CRYPTOGRAPHY VULNERABILITY (Major Severity) ===
 // SonarCloud will detect MD5 as weak cryptographic hash
 app.post('/demo/vuln/weak-crypto', (req, res) => {
   const { password } = req.body;
   const crypto = require('crypto');
-  
+
   // VULNERABLE: Using MD5 hash for password storage
   const weakHash = crypto.createHash('md5').update(password).digest('hex');
-  
+
   res.json({
     message: 'Weak cryptography vulnerable endpoint',
     algorithm: 'MD5',
     hash: weakHash.substring(0, 8) + '...',
     severity: 'MAJOR',
-    type: 'SAST - Weak Cryptography'
+    type: 'SAST - Weak Cryptography',
   });
 });
-
-
 
 // === PATH TRAVERSAL VULNERABILITY (Major Severity) ===
 // SonarCloud will detect this as a path traversal risk
 app.get('/demo/vuln/path-traversal', (req, res) => {
   const { filename } = req.query;
   const path = require('path');
-  
+
   // VULNERABLE: User input used directly in file path without validation
   const filePath = path.join(__dirname, 'public', filename);
-  
+
   res.json({
     message: 'Path traversal vulnerable endpoint',
     requestedFile: filename,
     resolvedPath: filePath,
     severity: 'MAJOR',
-    type: 'SAST - Path Traversal'
+    type: 'SAST - Path Traversal',
   });
 });
-
 
 // ==========================================
 // DAST VULNERABILITIES (OWASP ZAP Detection)
 // ==========================================
 
-
 // === REFLECTED XSS VULNERABILITY (High Severity) ===
 // OWASP ZAP will detect this as a reflected XSS vulnerability
 app.get('/demo/vuln/xss', (req, res) => {
   const userInput = req.query.search || '';
-  
+
   // VULNERABLE: User input directly embedded in HTML without escaping
   const html = `
     <!DOCTYPE html>
@@ -572,20 +567,19 @@ app.get('/demo/vuln/xss', (req, res) => {
         <h1>Search Results for: ${userInput}</h1>
         <p>You searched for: ${userInput}</p>
         <div>Query: ${userInput}</div>
+        <script>alert('XSS detected: ${userInput}');</script>
       </body>
     </html>
   `;
-  
+
   res.send(html);
 });
-
-
 
 // === CSRF VULNERABILITY (High Severity) ===
 // OWASP ZAP will detect missing CSRF protection
 app.post('/demo/vuln/csrf-transfer', (req, res) => {
   const { toAccount, amount } = req.body;
-  
+
   // VULNERABLE: No CSRF token validation
   // This allows cross-site request forgery attacks
   res.json({
@@ -594,38 +588,34 @@ app.post('/demo/vuln/csrf-transfer', (req, res) => {
       toAccount: toAccount,
       amount: amount,
       timestamp: new Date().toISOString(),
-      status: 'completed'
+      status: 'completed',
     },
     severity: 'HIGH',
-    type: 'DAST - CSRF Protection Missing'
+    type: 'DAST - CSRF Protection Missing',
   });
 });
-
-
 
 // === INSECURE DIRECT OBJECT REFERENCE (High Severity) ===
 // OWASP ZAP will detect this as IDOR vulnerability
 app.get('/demo/vuln/idor/:accountId', (req, res) => {
   const accountId = req.params.accountId;
-  
+
   // VULNERABLE: No authorization check - anyone can access any account
   const accountData = {
     accountId: accountId,
     balance: Math.floor(Math.random() * 100000),
     owner: 'John Doe',
     accountType: 'Premium',
-    lastTransaction: '2024-01-15T10:30:00Z'
+    lastTransaction: '2024-01-15T10:30:00Z',
   };
-  
+
   res.json({
     message: 'Insecure Direct Object Reference vulnerable endpoint',
     account: accountData,
     severity: 'HIGH',
-    type: 'DAST - IDOR'
+    type: 'DAST - IDOR',
   });
 });
-
-
 
 // === INFORMATION DISCLOSURE VULNERABILITY (Medium Severity) ===
 // OWASP ZAP will detect sensitive information in error messages
@@ -640,13 +630,11 @@ app.get('/demo/vuln/info-disclosure', (req, res) => {
     connectionPool: 'max_connections=100',
     serverVersion: 'Node.js v22.20.0',
     environment: 'production',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   };
-  
+
   throw error;
 });
-
-
 
 // === MISSING SECURITY HEADERS VULNERABILITY (Medium Severity) ===
 // OWASP ZAP will detect missing security headers
@@ -657,17 +645,20 @@ app.use('/demo/vuln/no-headers', (req, res, next) => {
   res.removeHeader('X-XSS-Protection');
   res.removeHeader('Strict-Transport-Security');
   res.removeHeader('Content-Security-Policy');
-  
+
   res.json({
     message: 'Missing security headers vulnerable endpoint',
-    headersRemoved: 
-      ['X-Frame-Options', 'X-Content-Type-Options', 'X-XSS-Protection', 
-       'Strict-Transport-Security', 'Content-Security-Policy'],
+    headersRemoved: [
+      'X-Frame-Options',
+      'X-Content-Type-Options',
+      'X-XSS-Protection',
+      'Strict-Transport-Security',
+      'Content-Security-Policy',
+    ],
     severity: 'MEDIUM',
-    type: 'DAST - Missing Security Headers'
+    type: 'DAST - Missing Security Headers',
   });
 });
-
 
 // ==========================================
 // DEMONSTRATION CONTROL ENDPOINT
@@ -682,23 +673,23 @@ app.get('/demo/vulnerability-status', (req, res) => {
       severity: 'CRITICAL',
       type: 'SAST',
       active: false, // Set to true when uncommented
-      description: 'Direct SQL query concatenation vulnerability'
+      description: 'Direct SQL query concatenation vulnerability',
     },
     {
       name: 'Hard-coded Credentials',
       endpoint: '/demo/vuln/hardcoded-creds',
-      severity: 'CRITICAL', 
+      severity: 'CRITICAL',
       type: 'SAST',
       active: false,
-      description: 'API keys and passwords in source code'
+      description: 'API keys and passwords in source code',
     },
     {
       name: 'Command Injection',
       endpoint: '/demo/vuln/command-injection',
       severity: 'CRITICAL',
-      type: 'SAST', 
+      type: 'SAST',
       active: false,
-      description: 'Shell command injection via user input'
+      description: 'Shell command injection via user input',
     },
     {
       name: 'Weak Cryptography',
@@ -706,7 +697,7 @@ app.get('/demo/vulnerability-status', (req, res) => {
       severity: 'MAJOR',
       type: 'SAST',
       active: false,
-      description: 'Using MD5 hash for password storage'
+      description: 'Using MD5 hash for password storage',
     },
     {
       name: 'Path Traversal',
@@ -714,7 +705,7 @@ app.get('/demo/vulnerability-status', (req, res) => {
       severity: 'MAJOR',
       type: 'SAST',
       active: false,
-      description: 'File system access via user input'
+      description: 'File system access via user input',
     },
     {
       name: 'Reflected XSS',
@@ -722,7 +713,7 @@ app.get('/demo/vulnerability-status', (req, res) => {
       severity: 'HIGH',
       type: 'DAST',
       active: false,
-      description: 'Cross-site scripting via unescaped output'
+      description: 'Cross-site scripting via unescaped output',
     },
     {
       name: 'CSRF Protection Missing',
@@ -730,7 +721,7 @@ app.get('/demo/vulnerability-status', (req, res) => {
       severity: 'HIGH',
       type: 'DAST',
       active: false,
-      description: 'No CSRF token validation'
+      description: 'No CSRF token validation',
     },
     {
       name: 'Insecure Direct Object Reference',
@@ -738,7 +729,7 @@ app.get('/demo/vulnerability-status', (req, res) => {
       severity: 'HIGH',
       type: 'DAST',
       active: false,
-      description: 'Unauthorized access to resources'
+      description: 'Unauthorized access to resources',
     },
     {
       name: 'Information Disclosure',
@@ -746,7 +737,7 @@ app.get('/demo/vulnerability-status', (req, res) => {
       severity: 'MEDIUM',
       type: 'DAST',
       active: false,
-      description: 'Sensitive information in error messages'
+      description: 'Sensitive information in error messages',
     },
     {
       name: 'Missing Security Headers',
@@ -754,20 +745,20 @@ app.get('/demo/vulnerability-status', (req, res) => {
       severity: 'MEDIUM',
       type: 'DAST',
       active: false,
-      description: 'Missing important security HTTP headers'
-    }
+      description: 'Missing important security HTTP headers',
+    },
   ];
 
   res.json({
     message: 'Demonstration Vulnerability Status',
     timestamp: new Date().toISOString(),
     totalVulnerabilities: vulnerabilities.length,
-    activeCount: vulnerabilities.filter(v => v.active).length,
+    activeCount: vulnerabilities.filter((v) => v.active).length,
     vulnerabilities: vulnerabilities,
     instructions: {
       howToEnable: 'Uncomment the vulnerability code blocks in server.js',
       howToDisable: 'Keep all vulnerability code blocks commented out',
-      pipelineImpact: 'Active vulnerabilities will cause pipeline to fail at security gates'
-    }
+      pipelineImpact: 'Active vulnerabilities will cause pipeline to fail at security gates',
+    },
   });
 });
