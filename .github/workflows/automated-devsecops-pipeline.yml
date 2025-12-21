@@ -703,7 +703,7 @@ jobs:
         with:
           target: 'http://localhost:3000'
           rules_file_name: '.zap/rules.tsv'
-          cmd_options: '-a -j'
+          cmd_options: '-a -j -t http://localhost:3000/demo/vuln/xss?search=<script>alert(1)</script> -t http://localhost:3000/demo/vuln/simple-xss?input=<script>alert(1)</script> -t http://localhost:3000/demo/vuln/csrf-transfer -t http://localhost:3000/demo/vuln/idor/123 -t http://localhost:3000/xss?xss=<script>alert(1)</script> -t http://localhost:3000/no-headers'
           allow_issue_writing: false
           artifact_name: 'zap-scan-results'
                 

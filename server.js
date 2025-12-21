@@ -253,6 +253,19 @@ app.get('/demo/vuln/simple-xss', (req, res) => {
   res.send(`<html><body><h1>Hello ${input}</h1></body></html>`);
 });
 
+// Add guaranteed XSS vulnerability that ZAP will detect
+app.get('/xss', (req, res) => {
+  const xss = req.query.xss || '';
+  res.send(`<html><body><script>alert('${xss}')</script></body></html>`);
+});
+
+// Add missing security headers endpoint
+app.get('/no-headers', (req, res) => {
+  res.removeHeader('X-Frame-Options');
+  res.removeHeader('X-Content-Type-Options');
+  res.send('<html><body>No security headers</body></html>');
+});
+
 // ============================================
 // EMAILJS CONFIGURATION
 // ============================================
