@@ -710,6 +710,46 @@ jobs:
       # ZAP scan report is automatically uploaded as artifact by the action above
       # The artifact will be available as 'zap-scan-results' with the HTML report
 
+      # Check ZAP results and fail pipeline if vulnerabilities found
+      - name: Check ZAP Results for Vulnerabilities
+        run: |
+          echo "=== Checking ZAP Scan Results ==="
+          
+          # Look for the ZAP report JSON file
+          if [ -f "report_json.json" ]; then
+            echo "Found ZAP JSON report"
+            
+            # Check for HIGH or MEDIUM severity vulnerabilities
+            HIGH_COUNT=$(jq -r '.site[] | .alerts[] | select(.risk == "HIGH") | .risk' report_json.json | wc -l || echo "0")
+            MEDIUM_COUNT=$(jq -r '.site[] | .alerts[] | select(.risk == "MEDIUM") | .risk' report_json.json | wc -l || echo "0")
+            
+            echo "High severity vulnerabilities found: $HIGH_COUNT"
+            echo "Medium severity vulnerabilities found: $MEDIUM_COUNT"
+            
+            if [ "$HIGH_COUNT" -gt 0 ] || [ "$MEDIUM_COUNT" -gt 0 ]; then
+              echo "::error::DAST FAILED: Security vulnerabilities detected!"
+              echo "::error::High: $HIGH_COUNT, Medium: $MEDIUM_COUNT"
+              echo "::error::Pipeline blocked due to security findings"
+              exit 1
+            else
+              echo "No high or medium severity vulnerabilities found"
+            fi
+          else
+            echo "ZAP JSON report not found, checking HTML report"
+            
+            # Fallback: Check HTML report for vulnerability indicators
+            if [ -f "report_html.html" ]; then
+              if grep -q "High\|Medium\|FAIL" report_html.html; then
+                echo "::error::DAST FAILED: Vulnerabilities found in HTML report"
+                exit 1
+              else
+                echo "No vulnerabilities detected in HTML report"
+              fi
+            else
+              echo "No ZAP report files found"
+            fi
+          fi
+
       # Clean up Docker container
       # Ensures proper cleanup regardless of scan outcome
       - name: Stop Application

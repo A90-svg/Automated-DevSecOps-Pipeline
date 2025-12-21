@@ -266,9 +266,9 @@ app.get('/no-headers', (req, res) => {
   res.send('<html><body>No security headers</body></html>');
 });
 
-// ============================================
+// ===========================================
 // EMAILJS CONFIGURATION
-// ============================================
+// ===========================================
 //
 // EmailJS is used to send OTP emails without exposing SMTP credentials
 // Configuration is loaded from environment variables for security
