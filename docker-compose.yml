@@ -1,7 +1,7 @@
 # ============================================
 # FINSECURE APP - DOCKER COMPOSE
 # ============================================
-# Production-ready Docker Compose configuration
+# Deployment-ready Docker Compose configuration
 # 
 # Features:
 # - Health checks for monitoring

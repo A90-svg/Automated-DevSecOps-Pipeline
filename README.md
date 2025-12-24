@@ -441,7 +441,7 @@ The codebase has been thoroughly documented with comprehensive comments:
 
 ### Configuration Files
 - **Dockerfile**: Multi-stage build with non-root user and health checks
-- **docker-compose.yml**: Production-ready configuration with restart policies
+- **docker-compose.yml**: Deployment-ready configuration with restart policies
 - **GitHub Actions**: Complete DevSecOps pipeline with SAST/SCA/DAST
 - **Tests**: Jest test suite with comprehensive endpoint coverage
 
