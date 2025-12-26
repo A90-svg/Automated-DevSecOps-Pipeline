@@ -94,45 +94,18 @@ sonar.organization=your-sonarcloud-organization
 
 ### **STEP 4: Update GitHub Actions Workflow**
 
-**IMPORTANT:** The workflow file contains hardcoded references that must be updated for your account.
+**IMPORTANT:** The workflow file has been updated to use secrets automatically. 
 
-Edit the file `.github/workflows/automated-devsecops-pipeline.yml`:
+**No manual editing required!** The workflow now uses:
+- `${{ secrets.SONAR_PROJECT_KEY }}` instead of hardcoded values
+- `${{ secrets.SONAR_ORGANIZATION }}` instead of hardcoded values
 
-**Find these lines (around line 206-207):**
-```yaml
--Dsonar.projectKey=A90-svg_Automated-DevSecOps-Pipeline
--Dsonar.organization=a90-svg
-```
+**What this means:**
+- You only need to configure secrets in GitHub (STEP 9)
+- The workflow will automatically use your configured values
+- No need to edit the YAML file manually
 
-**Replace with:**
-```yaml
-# Replace YOUR_USERNAME with your actual GitHub username
--Dsonar.projectKey=YOUR_USERNAME_Automated-DevSecOps-Pipeline
-# Replace your-sonarcloud-organization with your SonarCloud org name
--Dsonar.organization=your-sonarcloud-organization
-```
-
-**Find these lines (around line 233):**
-```yaml
-dotnet-sonarscanner begin /k:"A90-svg_Automated-DevSecOps-Pipeline" /o:"a90-svg"
-```
-
-**Replace with:**
-```yaml
-# Replace YOUR_USERNAME and your-sonarcloud-organization
-dotnet-sonarscanner begin /k:"YOUR_USERNAME_Automated-DevSecOps-Pipeline" /o:"your-sonarcloud-organization"
-```
-
-**Find these lines (around line 264):**
-```yaml
-PROJECT_KEY="${{ secrets.SONAR_PROJECT_KEY || 'A90-svg_Automated-DevSecOps-Pipeline' }}"
-```
-
-**Replace with:**
-```yaml
-# Replace YOUR_USERNAME
-PROJECT_KEY="${{ secrets.SONAR_PROJECT_KEY || 'YOUR_USERNAME_Automated-DevSecOps-Pipeline' }}"
-```
+**Note:** If you want to customize the workflow, the secrets are already properly configured.
 
 ### **STEP 5: Create New SonarCloud Project**
 
