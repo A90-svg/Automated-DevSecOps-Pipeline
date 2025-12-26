@@ -203,7 +203,9 @@ jobs:
           args: >
             -Dsonar.qualitygate.wait=false
             -Dsonar.coverage.exclusions=**
+            # IMPORTANT: Replace A90-svg with your GitHub username
             -Dsonar.projectKey=A90-svg_Automated-DevSecOps-Pipeline
+            # IMPORTANT: Replace a90-svg with your SonarCloud organization
             -Dsonar.organization=a90-svg
             -Dsonar.host.url=https://sonarcloud.io
             -Dsonar.sources=.
@@ -230,6 +232,7 @@ jobs:
           export PATH="$PATH:/root/.dotnet/tools"
           
           # Run scan with detailed output
+          # IMPORTANT: Replace A90-svg with your GitHub username and a90-svg with your SonarCloud organization
           dotnet-sonarscanner begin /k:"A90-svg_Automated-DevSecOps-Pipeline" /o:"a90-svg" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.sources="." /d:sonar.inclusions="**/*.js" /d:sonar.exclusions="**/node_modules/**,**/test/**,**/tests/**,**/*.test.js,**/*.spec.js,**/coverage/**,**/dist/**,**/build/**"
           
           echo "Scan preparation completed. Checking for issues..."
@@ -261,6 +264,7 @@ jobs:
           fi
           
           # Fetch analysis results from SonarCloud API
+          # IMPORTANT: Replace A90-svg with your GitHub username in the fallback value
           PROJECT_KEY="${{ secrets.SONAR_PROJECT_KEY || 'A90-svg_Automated-DevSecOps-Pipeline' }}"
           SONAR_TOKEN="${{ secrets.SONAR_TOKEN }}"
           
@@ -382,9 +386,11 @@ jobs:
               
               echo '</div>' >> sonar-security-report.html
             else
+              # IMPORTANT: Replace A90-svg with your GitHub username in the fallback value
               echo '<div class="no-issues"><h2>Great News!</h2><p>No HIGH severity security issues detected by SonarCloud. Check the <a href="https://sonarcloud.io/project/overview?id=${{ secrets.SONAR_PROJECT_KEY || 'A90-svg_Automated-DevSecOps-Pipeline' }}" target="_blank">SonarCloud dashboard</a> for medium/low severity issues.</p></div>' >> sonar-security-report.html
             fi
           else
+            # IMPORTANT: Replace A90-svg with your GitHub username in the fallback value
             echo '<div class="no-issues"><h2>Scan Results</h2><p>SonarCloud scan completed. Detailed results available in <a href="https://sonarcloud.io/project/overview?id=${{ secrets.SONAR_PROJECT_KEY || 'A90-svg_Automated-DevSecOps-Pipeline' }}" target="_blank">SonarCloud dashboard</a>.</p></div>' >> sonar-security-report.html
           fi
           
@@ -406,6 +412,7 @@ jobs:
           echo "## SAST Scan Results" >> $GITHUB_STEP_SUMMARY
           echo "**Tool**: SonarCloud" >> $GITHUB_STEP_SUMMARY
           echo "**Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          # IMPORTANT: Replace A90-svg with your GitHub username in the fallback value
           echo "[View detailed results](https://sonarcloud.io/project/overview?id=${{ secrets.SONAR_PROJECT_KEY || 'A90-svg_Automated-DevSecOps-Pipeline' }})" >> $GITHUB_STEP_SUMMARY
 
   # ============================================

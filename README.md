@@ -47,92 +47,280 @@ The FinSecure demo application includes:
 - Node.js **22.20.0** or higher
 - npm 10.x or higher
 - Docker 28.4+ and Docker Compose
-- GitHub repository with Actions enabled
+- **GitHub account** (for forking and configuration)
 - SonarCloud account (free tier)
 - Snyk account (free tier)
 - EmailJS account (optional, for OTP demo)
 
+**IMPORTANT**: You must fork this repository before cloning. Do not clone directly as you won't be able to configure the pipeline for your account.
 
-## External Service Setup
+## **Complete Setup Guide for New GitHub Account**
 
-### SonarCloud Setup (SAST)
-1. Go to [SonarCloud](https://sonarcloud.io/) and sign in with GitHub
-2. Create a new organization (if you don't have one)
-3. Create a new project manually
-4. Generate a token in your account security settings
-5. Copy the token (you won't see it again)
+Follow these steps **exactly** in order. Do not skip any steps.
 
-### Snyk Setup (SCA)
-1. Sign up at [Snyk](https://snyk.io/) with GitHub
-2. Go to Account Settings > API Tokens
-3. Generate a new token and copy it
+### **STEP 1: Fork Repository (DO NOT CLONE DIRECTLY)**
 
+1. Go to https://github.com/A90-svg/Automated-DevSecOps-Pipeline
+2. Click the **"Fork"** button in the top-right
+3. Choose your GitHub account to fork to
+4. **Wait for fork to complete** (may take 30 seconds)
 
-
-## Installation
-
-1. Clone the repository:
-
-   ```bash
-   git clone https://github.com/A90-svg/Automated-DevSecOps-Pipeline.git
-   cd Automated-DevSecOps-Pipeline
-   ```
-
-2. Install dependencies:
-
-   ```bash
-   npm ci
-   ```
-
-3. Set up environment variables:
-   ```bash
-   cp .env.example .env
-   # Edit .env with your configuration
-   ```
-
-## GitHub Secrets Setup
-
-Required secrets for pipeline functionality:
+### **STEP 2: Clone Your Fork**
 
 ```bash
-# Repository > Settings > Secrets and variables > Actions
-SONAR_TOKEN=your_sonarcloud_token
-SONAR_PROJECT_KEY=your_project_key
-SONAR_ORGANIZATION=your_github_username
-SNYK_TOKEN=your_snyk_token
-EMAILJS_SERVICE_ID=your_emailjs_service_id (optional)
-EMAILJS_TEMPLATE_ID=your_emailjs_template_id (optional)
-EMAILJS_PUBLIC_KEY=your_emailjs_public_key (optional)
-EMAILJS_PRIVATE_KEY=your_emailjs_private_key (optional)
-GIT_TOKEN=your_github_personal_access_token (for deployment)
+# Clone YOUR fork (not the original)
+# Replace YOUR_USERNAME with your actual GitHub username
+git clone https://github.com/YOUR_USERNAME/Automated-DevSecOps-Pipeline.git
+cd Automated-DevSecOps-Pipeline
 ```
+
+### **STEP 3: Update SonarCloud Configuration**
+
+Edit the file `sonar-project.properties`:
+
+**Find these lines:**
+```properties
+sonar.projectKey=A90-svg_Automated-DevSecOps-Pipeline
+sonar.organization=a90-svg
+```
+
+**Replace with:**
+```properties
+# Replace YOUR_USERNAME with your actual GitHub username
+sonar.projectKey=YOUR_USERNAME_Automated-DevSecOps-Pipeline
+# Replace your-sonarcloud-organization with your SonarCloud org name
+sonar.organization=your-sonarcloud-organization
+```
+
+### **STEP 4: Update GitHub Actions Workflow**
+
+**IMPORTANT:** The workflow file contains hardcoded references that must be updated for your account.
+
+Edit the file `.github/workflows/automated-devsecops-pipeline.yml`:
+
+**Find these lines (around line 206-207):**
+```yaml
+-Dsonar.projectKey=A90-svg_Automated-DevSecOps-Pipeline
+-Dsonar.organization=a90-svg
+```
+
+**Replace with:**
+```yaml
+# Replace YOUR_USERNAME with your actual GitHub username
+-Dsonar.projectKey=YOUR_USERNAME_Automated-DevSecOps-Pipeline
+# Replace your-sonarcloud-organization with your SonarCloud org name
+-Dsonar.organization=your-sonarcloud-organization
+```
+
+**Find these lines (around line 233):**
+```yaml
+dotnet-sonarscanner begin /k:"A90-svg_Automated-DevSecOps-Pipeline" /o:"a90-svg"
+```
+
+**Replace with:**
+```yaml
+# Replace YOUR_USERNAME and your-sonarcloud-organization
+dotnet-sonarscanner begin /k:"YOUR_USERNAME_Automated-DevSecOps-Pipeline" /o:"your-sonarcloud-organization"
+```
+
+**Find these lines (around line 264):**
+```yaml
+PROJECT_KEY="${{ secrets.SONAR_PROJECT_KEY || 'A90-svg_Automated-DevSecOps-Pipeline' }}"
+```
+
+**Replace with:**
+```yaml
+# Replace YOUR_USERNAME
+PROJECT_KEY="${{ secrets.SONAR_PROJECT_KEY || 'YOUR_USERNAME_Automated-DevSecOps-Pipeline' }}"
+```
+
+### **STEP 5: Create New SonarCloud Project**
+
+1. Go to https://sonarcloud.io/
+2. Sign in with **your GitHub account**
+3. Click **"+"** → **"Create new organization"**
+4. Choose "Free" plan
+5. Enter organization name (e.g., `your-github-username`)
+6. Click **"Create new project"**
+7. Choose **"Manual"** (not GitHub import)
+8. Project key: `YOUR_USERNAME_Automated-DevSecOps-Pipeline`
+9. Click **"Set up"**
+10. Go to **"My Account"** → **"Security"**
+11. Generate new token → **Copy immediately** (you won't see it again)
+
+### **STEP 6: Configure Snyk**
+
+1. Go to https://snyk.io/
+2. Sign up with **your GitHub account**
+3. Click **"Integrations"** → **"GitHub"**
+4. Click **"Connect"** and authorize Snyk
+5. Click **"Add repositories"**
+6. Find **YOUR forked repository** (not the original)
+7. Click **"Add"** to import it
+8. Go to **Account Settings** → **API Tokens**
+9. Click **"Generate Token"** → **Copy token**
+
+### **STEP 7: Optional EmailJS Setup (for OTP demo)**
+
+If you want the OTP email functionality to work:
+
+1. Go to https://www.emailjs.com/
+2. Sign up for a free account
+3. Click **"Email Services"** → **"Add New Service"**
+4. Choose your email provider (Gmail, Outlook, etc.)
+5. Connect your email account
+6. Go to **"Email Templates"** → **"Create New Template"**
+7. Create an OTP template with variables: `{{otp_code}}`, `{{user_email}}`
+8. Go to **"Integration"** → **"API Keys"** → **"Create API Key"**
+9. Copy your Public Key and Private Key
+10. Note your Service ID and Template ID
+
+### **STEP 8: Create GitHub Personal Access Token**
+
+1. Go to GitHub → **Settings** → **Developer settings**
+2. Click **"Personal access tokens"** → **"Tokens (classic)"**
+3. Click **"Generate new token"**
+4. Give it a name (e.g., "DevSecOps Pipeline")
+5. Set expiration (recommend 90 days)
+6. Check these permissions:
+   - ✓ `repo` (Full control of private repositories)
+   - ✓ `workflow` (Update GitHub Action workflows)
+7. Click **"Generate token"** → **Copy token**
+
+### **STEP 11: Add All Secrets to GitHub**
+
+Go to your forked repository → **Settings** → **Secrets and variables** → **Actions** → **"New repository secret"**
+
+Add these secrets one by one:
+
+```
+SONAR_TOKEN=your_sonarcloud_token_from_step_4
+SONAR_PROJECT_KEY=YOUR_USERNAME_Automated-DevSecOps-Pipeline
+SONAR_ORGANIZATION=your-sonarcloud-organization
+SNYK_TOKEN=your_snyk_token_from_step_5
+GIT_TOKEN=your_github_token_from_step_10
+```
+
+Optional (for OTP demo):
+```
+EMAILJS_SERVICE_ID=your_emailjs_service_id
+EMAILJS_TEMPLATE_ID=your_emailjs_template_id
+EMAILJS_PUBLIC_KEY=your_emailjs_public_key
+EMAILJS_PRIVATE_KEY=your_emailjs_private_key
+```
+
+### **STEP 12: Install Dependencies**
+
+```bash
+npm ci
+```
+
+### **STEP 13: Set Up Environment Variables**
+
+```bash
+copy .env.example .env
+# Edit .env with your configuration
+```
+
+### **STEP 14: Test Your Setup**
+
+1. Commit your changes:
+   ```bash
+   git add .
+   git commit -m "Configure for new GitHub account"
+   git push origin main
+   ```
+
+2. Go to your forked repository → **Actions** tab
+3. Click **"Run workflow"** to test the pipeline
+4. Verify all jobs complete successfully
+
+### **Setup Verification Checklist**
+
+Before proceeding, verify all items are completed:
+
+- [ ] **Repository Forked** (not cloned directly)
+- [ ] **sonar-project.properties** updated with your username
+- [ ] **GitHub Actions workflow** updated with your username
+- [ ] **SonarCloud project** created under your account
+- [ ] **Snyk integration** configured for your fork
+- [ ] **GitHub Personal Access Token** created with correct permissions
+- [ ] **All GitHub Secrets** added correctly
+- [ ] **Dependencies installed** with `npm ci`
+- [ ] **Environment variables** configured in `.env`
+- [ ] **Pipeline runs successfully** on test commit
+
+### **Setup Time & Cost Estimates**
+
+- **Setup Time**: 45-60 minutes for first-time users
+- **Pipeline Runtime**: 4-15 minutes per run (varies by code size and scan depth)
+- **Costs**: 
+  - SonarCloud: Free (up to 250,000 code lines/month)
+  - Snyk: Free tier (unlimited scans for open source)
+  - GitHub Actions: Free (2,000 minutes/month for public repos)
+  - EmailJS: Free (200 emails/month)
+
+### **Quick Verification Commands**
+
+After setup, verify each service:
+
+```bash
+# Verify Node.js version
+node --version  # Should show 22.20.0+
+
+# Verify npm version  
+npm --version   # Should show 10.x+
+
+# Test application locally
+npm run dev     # Should start on http://localhost:3000
+
+# Run tests locally
+npm test        # Should pass all tests
+
+# Check Docker build
+docker build -t test-app .  # Should build successfully
+```
+
+### **Using Pipeline Docker Artifacts**
+
+After pipeline runs, you'll get a Docker image artifact (e.g., `finsecure-app:e6daeff547tyhgbn687`):
+
+1. **Download the Docker image artifact** from GitHub Actions
+2. **Load the image locally**:
+   ```bash
+   docker load -i finsecure-app.tar
+   ```
+3. **Run the tested image**:
+   ```bash
+   docker run -p 3000:3000 finsecure-app:e6daeff547tyhgbn687
+   ```
+4. **Tag as latest** (optional):
+   ```bash
+   docker tag finsecure-app:e6daeff547tyhgbn687 finsecure-app:latest
+   docker run -p 3000:3000 finsecure-app:latest
+   ```
+
+**Note**: The long tag ensures you're using the exact image that passed all security scans.
+
 
 ## Configuration
 
-Configure the following environment variables in your `.env` file:
+Your `.env` file should contain:
 
 ```env
 # Server Configuration
-PORT=the_port_you_want_to_use
-NODE_VERSION=the_node_version_you_want_to_use
+PORT=3000
 NODE_ENV=development
+NODE_VERSION=22.20.0
 
-# EmailJS Configuration (for OTP demo)
+# EmailJS Configuration (optional, for OTP demo)
 EMAILJS_SERVICE_ID=your_service_id
 EMAILJS_TEMPLATE_ID=your_template_id
 EMAILJS_PUBLIC_KEY=your_public_key
 EMAILJS_PRIVATE_KEY=your_private_key
 
-# SonarCloud Configuration
-SONAR_TOKEN=your_sonarcloud_token_here
-SONAR_ORGANIZATION=your_sonarcloud_org
-SONAR_PROJECT_KEY=your_sonarcloud_project_key
-
-# Snyk Configuration
-SNYK_TOKEN=your_snyk_token_here
-
 # Security
-ALLOWED_ORIGINS=the_allowed_origins_you_want_to_use
+ALLOWED_ORIGINS=http://localhost:3000
 ```
 
 ## Running the Application
@@ -151,18 +339,6 @@ The application will be available at `http://localhost:3000`
 npm start
 ```
 
-### Using Docker
-
-1. Build the Docker image:
-
-   ```bash
-   docker build -t finsecure-app .
-   ```
-
-2. Run the container:
-   ```bash
-   docker run -p 3000:3000 --env-file .env finsecure-app
-   ```
 
 ## Testing
 
@@ -416,7 +592,7 @@ This project is for educational and demonstration purposes only. No part of this
 
 ---
 
-**Project Status:** Ready for testing | **Last Updated:** 2025-12-10
+**Project Status:** Ready for testing | **Last Updated:** 2025-12-26
 
 ## Code Documentation
 
