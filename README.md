@@ -1,4 +1,4 @@
-# FinSecure Application's Automated DevSecOps Pipeline
+# Automated DevSecOps Pipeline
 
 Automated DevSecOps pipeline demonstrating SAST, SCA, and DAST integration with GitHub Actions for a fintech demo application. Supports PDPL and CBB Cybersecurity Framework compliance.
 
@@ -68,8 +68,6 @@ Follow these steps **exactly** in order. Do not skip any steps.
 ### **STEP 2: Clone Your Fork**
 
 ```bash
-# Clone YOUR fork (not the original)
-# Replace YOUR_USERNAME with your actual GitHub username
 git clone https://github.com/YOUR_USERNAME/Automated-DevSecOps-Pipeline.git
 cd Automated-DevSecOps-Pipeline
 ```
@@ -92,20 +90,13 @@ sonar.projectKey=YOUR_USERNAME_Automated-DevSecOps-Pipeline
 sonar.organization=your-sonarcloud-organization
 ```
 
-### **STEP 4: Update GitHub Actions Workflow**
+### **STEP 4: Configure GitHub Actions Workflow**
 
-**IMPORTANT:** The workflow file has been updated to use secrets automatically. 
+The GitHub Actions workflow automatically uses secrets - no manual YAML editing needed. The workflow references:
+- `${{ secrets.SONAR_PROJECT_KEY }}`
+- `${{ secrets.SONAR_ORGANIZATION }}`
 
-**No manual editing required!** The workflow now uses:
-- `${{ secrets.SONAR_PROJECT_KEY }}` instead of hardcoded values
-- `${{ secrets.SONAR_ORGANIZATION }}` instead of hardcoded values
-
-**What this means:**
-- You only need to configure secrets in GitHub (STEP 9)
-- The workflow will automatically use your configured values
-- No need to edit the YAML file manually
-
-**Note:** If you want to customize the workflow, the secrets are already properly configured.
+You'll configure these secrets in STEP 9.
 
 ### **STEP 5: Create New SonarCloud Project**
 
@@ -160,18 +151,18 @@ If you want the OTP email functionality to work:
    - ✓ `workflow` (Update GitHub Action workflows)
 7. Click **"Generate token"** → **Copy token**
 
-### **STEP 11: Add All Secrets to GitHub**
+### **STEP 9: Add All Secrets to GitHub**
 
 Go to your forked repository → **Settings** → **Secrets and variables** → **Actions** → **"New repository secret"**
 
 Add these secrets one by one:
 
 ```
-SONAR_TOKEN=your_sonarcloud_token_from_step_4
+SONAR_TOKEN=your_sonarcloud_token_from_step_5
 SONAR_PROJECT_KEY=YOUR_USERNAME_Automated-DevSecOps-Pipeline
 SONAR_ORGANIZATION=your-sonarcloud-organization
-SNYK_TOKEN=your_snyk_token_from_step_5
-GIT_TOKEN=your_github_token_from_step_10
+SNYK_TOKEN=your_snyk_token_from_step_6
+GIT_TOKEN=your_github_token_from_step_8
 ```
 
 Optional (for OTP demo):
@@ -182,20 +173,27 @@ EMAILJS_PUBLIC_KEY=your_emailjs_public_key
 EMAILJS_PRIVATE_KEY=your_emailjs_private_key
 ```
 
-### **STEP 12: Install Dependencies**
+### **STEP 10: Install Dependencies**
 
 ```bash
 npm ci
 ```
 
-### **STEP 13: Set Up Environment Variables**
+### **STEP 11: Set Up Environment Variables**
 
-```bash
+**Windows:**
+```cmd
 copy .env.example .env
 # Edit .env with your configuration
 ```
 
-### **STEP 14: Test Your Setup**
+**macOS/Linux:**
+```bash
+cp .env.example .env
+# Edit .env with your configuration
+```
+
+### **STEP 12: Test Your Setup**
 
 1. Commit your changes:
    ```bash
@@ -256,20 +254,48 @@ docker build -t test-app .  # Should build successfully
 
 ### **Using Pipeline Docker Artifacts**
 
-After pipeline runs, you'll get a Docker image artifact (e.g., `finsecure-app:e6daeff547tyhgbn687`):
+After pipeline runs, you'll get a Docker image artifact named `docker-image`:
 
 1. **Download the Docker image artifact** from GitHub Actions
+   - Go to your repository → **Actions** → **Select workflow run**
+   - Click **"docker-image"** artifact → **Download**
+
 2. **Load the image locally**:
-   ```bash
-   docker load -i finsecure-app.tar
+   
+   **Windows:**
+   ```powershell
+   # Navigate to Downloads directory
+   cd $env:USERPROFILE\Downloads
+   
+   # Extract the ZIP file (Windows built-in extraction)
+   # Right-click docker-image.zip -> "Extract All"
+   # OR use PowerShell (requires 7-Zip or similar):
+   # Expand-Archive -Path "docker-image.zip" -DestinationPath .
+   
+   # Load the Docker image
+   docker load -i docker-image.tar
    ```
+   
+   **macOS/Linux:**
+   ```bash
+   # Navigate to Downloads directory
+   cd ~/Downloads
+   
+   # Extract the ZIP file
+   tar -xf "docker-image.zip"
+   
+   # Load the Docker image
+   docker load -i docker-image.tar
+   ```
+
 3. **Run the tested image**:
    ```bash
-   docker run -p 3000:3000 finsecure-app:e6daeff547tyhgbn687
+   docker run -p 3000:3000 finsecure-app:latest
    ```
+
 4. **Tag as latest** (optional):
    ```bash
-   docker tag finsecure-app:e6daeff547tyhgbn687 finsecure-app:latest
+   docker tag finsecure-app:latest finsecure-app:latest
    docker run -p 3000:3000 finsecure-app:latest
    ```
 
