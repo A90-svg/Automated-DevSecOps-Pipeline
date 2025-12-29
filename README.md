@@ -44,6 +44,7 @@ The FinSecure demo application includes:
 
 ## Prerequisites
 
+- **Git** latest
 - Node.js **22.20.0** or higher
 - npm 10.x or higher
 - Docker 28.4+ and Docker Compose
@@ -124,7 +125,23 @@ You'll configure these secrets in STEP 9.
 8. Go to **Account Settings** → **API Tokens**
 9. Click **"Generate Token"** → **Copy token**
 
-### **STEP 7: Optional EmailJS Setup (for OTP demo)**
+### **STEP 7: Configure OWASP ZAP (DAST Scanning)**
+
+The project includes OWASP ZAP for Dynamic Application Security Testing. Configure ZAP settings:
+
+1. **Review ZAP Rules** (optional):
+   - Open `.zap/rules.tsv` to see configured security rules
+   - Rules marked `IGNORE` are disabled
+   - Rules marked `WARN` show warnings  
+   - Rules marked `FAIL` block the pipeline
+
+2. **Configure DAST Targets**:
+   - Add `ALLOWED_ORIGINS` to GitHub Secrets (STEP 10)
+   - Example: `http://localhost:3000` for local testing
+
+**Note**: The pipeline automatically runs ZAP DAST scans on your configured targets. No local ZAP installation needed.
+
+### **STEP 8: Optional EmailJS Setup (for OTP demo)**
 
 If you want the OTP email functionality to work:
 
@@ -134,24 +151,23 @@ If you want the OTP email functionality to work:
 4. Choose your email provider (Gmail, Outlook, etc.)
 5. Connect your email account
 6. Go to **"Email Templates"** → **"Create New Template"**
-7. Create an OTP template with variables: `{{otp_code}}`, `{{user_email}}`
+7. Create an OTP template with variables: `{{otp_code}}`
 8. Go to **"Integration"** → **"API Keys"** → **"Create API Key"**
 9. Copy your Public Key and Private Key
 10. Note your Service ID and Template ID
 
-### **STEP 8: Create GitHub Personal Access Token**
+### **STEP 9: Create GitHub Personal Access Token**
 
 1. Go to GitHub → **Settings** → **Developer settings**
 2. Click **"Personal access tokens"** → **"Tokens (classic)"**
 3. Click **"Generate new token"**
 4. Give it a name (e.g., "DevSecOps Pipeline")
 5. Set expiration (recommend 90 days)
-6. Check these permissions:
+6. Check this permission:
    - ✓ `repo` (Full control of private repositories)
-   - ✓ `workflow` (Update GitHub Action workflows)
 7. Click **"Generate token"** → **Copy token**
 
-### **STEP 9: Add All Secrets to GitHub**
+### **STEP 10: Add All Secrets to GitHub**
 
 Go to your forked repository → **Settings** → **Secrets and variables** → **Actions** → **"New repository secret"**
 
@@ -162,7 +178,8 @@ SONAR_TOKEN=your_sonarcloud_token_from_step_5
 SONAR_PROJECT_KEY=YOUR_USERNAME_Automated-DevSecOps-Pipeline
 SONAR_ORGANIZATION=your-sonarcloud-organization
 SNYK_TOKEN=your_snyk_token_from_step_6
-GIT_TOKEN=your_github_token_from_step_8
+GIT_TOKEN=your_github_token_from_step_9
+ALLOWED_ORIGINS=http://localhost:3000  # OWASP ZAP DAST scanning targets
 ```
 
 Optional (for OTP demo):
@@ -173,13 +190,13 @@ EMAILJS_PUBLIC_KEY=your_emailjs_public_key
 EMAILJS_PRIVATE_KEY=your_emailjs_private_key
 ```
 
-### **STEP 10: Install Dependencies**
+### **STEP 11: Install Dependencies**
 
 ```bash
 npm ci
 ```
 
-### **STEP 11: Set Up Environment Variables**
+### **STEP 12: Set Up Environment Variables**
 
 **Windows:**
 ```cmd
@@ -193,7 +210,7 @@ cp .env.example .env
 # Edit .env with your configuration
 ```
 
-### **STEP 12: Test Your Setup**
+### **STEP 13: Test Your Setup**
 
 1. Commit your changes:
    ```bash
@@ -231,25 +248,42 @@ Before proceeding, verify all items are completed:
   - GitHub Actions: Free (2,000 minutes/month for public repos)
   - EmailJS: Free (200 emails/month)
 
-### **Quick Verification Commands**
 
-After setup, verify each service:
+### **Local Development Setup**
 
+**1. Environment Preparation:**
 ```bash
-# Verify Node.js version
-node --version  # Should show 22.20.0+
+# Install dependencies (exact versions from package-lock.json)
+npm ci
 
-# Verify npm version  
-npm --version   # Should show 10.x+
+# Copy environment configuration
+copy .env.example .env  # Windows
+# cp .env.example .env  # macOS/Linux
+```
 
-# Test application locally
-npm run dev     # Should start on http://localhost:3000
+**2. Development Workflow:**
+```bash
+# Start development server with hot reload
+npm run dev
 
-# Run tests locally
-npm test        # Should pass all tests
+# Run tests in watch mode
+npm run test:watch
 
-# Check Docker build
-docker build -t test-app .  # Should build successfully
+# Code formatting and linting
+npm run format && npm run lint
+
+# Security audit
+npm run security:audit
+```
+
+**3. Docker Development:**
+```bash
+# Build and run locally
+docker build -t finsecure-dev .
+docker run -p 3000:3000 --env-file .env finsecure-dev
+
+# Using Docker Compose for development
+docker-compose up --build
 ```
 
 ### **Using Pipeline Docker Artifacts**
@@ -551,24 +585,101 @@ This application includes several security measures:
 
 - Verify SONAR_TOKEN is correct
 - Check SonarCloud organization access
-- Ensure project key matches
+- Ensure project key matches sonar-project.properties
+- Check if SonarCloud service is operational
 
 **Pipeline fails on SCA scan:**
 
 - Verify SNYK_TOKEN is valid
 - Check Snyk account permissions
+- Ensure repository is properly connected to Snyk
+- Check if Snyk service is available
 
 **Docker build fails:**
 
 - Ensure Node.js 22.20.0 compatibility
-- Check Docker daemon is running
+- Check Docker Desktop is running (`docker version`)
 - Verify .dockerignore isn't excluding needed files
+- Check for syntax errors in Dockerfile
+- Ensure sufficient disk space
 
 **Application won't start:**
 
 - Check .env file configuration
-- Verify port 3000 is available
+- Verify port 3000 is available (`netstat -ano | findstr :3000`)
 - Review server logs for errors
+- Ensure all dependencies installed (`npm ci`)
+- Check Node.js version (`node --version`)
+
+**GitHub Actions workflow failures:**
+
+- Verify YAML syntax in workflow file
+- Check GitHub Secrets are correctly configured
+- Ensure runner permissions are sufficient
+- Review workflow logs for specific error messages
+- Check if workflow file is in correct path (.github/workflows/)
+
+**EmailJS/OTP not working:**
+
+- Verify EmailJS credentials in .env
+- Check EmailJS service is properly configured
+- Ensure email template exists with correct variables
+- Review EmailJS API key permissions
+- Check spam/junk folders for test emails
+
+**Docker Compose deployment issues:**
+
+- Verify docker-compose.yml syntax
+- Check if required ports are available
+- Ensure Docker Desktop is running
+- Review container logs (`docker-compose logs`)
+- Check volume permissions
+
+**Environment variable validation failures:**
+
+- Verify .env file exists and is properly formatted
+- Check for missing required variables
+- Ensure no extra spaces or special characters
+- Validate variable values match expected format
+
+**Test failures:**
+
+- Run tests locally (`npm test`) before pushing
+- Check Jest configuration in jest.config.js
+- Verify test files exist in test/ directory
+- Ensure test database/mock data is available
+- Review specific test error messages
+
+### Debugging Commands
+
+```bash
+# Test application locally
+npm run dev
+curl http://localhost:3000/health
+
+# Test Docker build
+docker build -t test-app .
+docker run -p 3000:3000 test-app
+
+# Check pipeline configuration
+cat .github/workflows/automated-devsecops-pipeline.yml
+```
+
+### Performance Issues
+
+**Pipeline running slow:**
+
+- SonarCloud scans may take longer for larger codebases
+- Snyk dependency scanning speed varies by package count
+- OWASP ZAP DAST scans typically take 5-8 minutes
+- Consider reducing test data for faster initial runs
+
+**Application performance:**
+
+- Rate limiting: 1000 requests per 15 minutes per IP
+- Memory usage increases with concurrent users
+- Docker container resource limits may affect performance
+- Large transaction history can slow dashboard loading
 
 ### Branch Protection Setup
 
@@ -636,20 +747,6 @@ This project demonstrates multiple security best practices:
 - **Minimal Base Images**: Alpine Linux reduces attack surface
 - **Health Checks**: Container health monitoring
 - **Secrets Management**: GitHub Secrets with automatic masking
-
-### DevSecOps Pipeline
-- **SAST**: SonarCloud for static code analysis
-- **SCA**: Snyk for dependency vulnerability scanning
-- **DAST**: OWASP ZAP for dynamic security testing
-- **Security Gates**: Blocks merges on high-severity vulnerabilities
-
-## Compliance Metrics
-
-The pipeline generates compliance reports for:
-- **PDPL** (Bahrain Personal Data Protection Law)
-- **CBB Cybersecurity Framework**
-- **OWASP Top 10** coverage
-- **Vulnerability severity levels**
 
 ---
 

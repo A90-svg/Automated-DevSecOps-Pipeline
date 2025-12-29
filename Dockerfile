@@ -30,7 +30,7 @@ RUN npm ci --only=production
 # Create minimal production image
 FROM node:22-alpine AS production
 
-# Container metadata
+# Container metadata - for the maintainer part replace it with the email u signin in docker
 LABEL maintainer="finsecureapp@gmail.com"
 LABEL version="1.0"
 LABEL description="FinSecure Application (demo fintech app used as a testbed for the automated devsecops pipeline)"

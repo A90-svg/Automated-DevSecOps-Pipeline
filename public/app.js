@@ -635,10 +635,10 @@ const formatBHD = (amt) => {
   return `BHD ${v}`;
 };
 
-// -----------------------
+// -------------------------
 // DOM references for pages, nav, inputs and controls
 // - Keep them at top to make it easy to find UI wiring.
-// -----------------------
+// -------------------------
 const pages = {
   login: document.getElementById('page-login'),
   signup: document.getElementById('page-signup'),
